@@ -118,6 +118,104 @@ export class ValidationEngineService {
     };
   }
 
+  async validateRecords(
+    records: string[],
+    fileName: string = 'records.txt',
+    version: string = '2025',
+  ): Promise<ValidationResult> {
+    const startTime = Date.now();
+    const errors: ValidationError[] = [];
+    const warnings: ValidationError[] = [];
+    let processedRecords = 0;
+
+    // Validação da estrutura dos registros (similar à validação de arquivo)
+    const content = records.join('\n');
+    const fileValidationErrors = await this.fileValidator.validateFile(
+      content,
+      fileName,
+    );
+    errors.push(...fileValidationErrors);
+
+    // Validação registro por registro
+    for (let i = 0; i < records.length; i++) {
+      const lineNumber = i + 1;
+      const record = records[i].trim();
+
+      if (record === '') continue;
+
+      try {
+        // Determinar tipo de registro
+        const recordType = this.extractRecordType(record);
+
+        if (!recordType) {
+          errors.push({
+            lineNumber,
+            recordType: 'UNKNOWN',
+            fieldName: 'record_type',
+            fieldPosition: 0,
+            fieldValue: record.substring(0, 10),
+            ruleName: 'record_type_identification',
+            errorMessage: 'Tipo de registro não identificado',
+            severity: ValidationSeverity.ERROR,
+          });
+          continue;
+        }
+
+        // Validar registro
+        const recordErrors = await this.recordValidator.validateRecord(
+          record,
+          recordType,
+          lineNumber,
+          version,
+        );
+
+        errors.push(
+          ...recordErrors.filter(
+            (e) => e.severity === ValidationSeverity.ERROR,
+          ),
+        );
+        warnings.push(
+          ...recordErrors.filter(
+            (e) => e.severity === ValidationSeverity.WARNING,
+          ),
+        );
+
+        processedRecords++;
+      } catch (error) {
+        errors.push({
+          lineNumber,
+          recordType: 'UNKNOWN',
+          fieldName: 'record_processing',
+          fieldPosition: -1,
+          fieldValue: record.substring(0, 50),
+          ruleName: 'record_processing_error',
+          errorMessage: `Erro ao processar registro: ${(error as Error).message}`,
+          severity: ValidationSeverity.ERROR,
+        });
+      }
+    }
+
+    const processingTime = Date.now() - startTime;
+
+    const fileMetadata: FileMetadata = {
+      fileName,
+      fileSize: new TextEncoder().encode(content).length,
+      totalLines: records.length,
+      encoding: 'utf-8',
+      uploadDate: new Date(),
+    };
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      totalRecords: records.length,
+      processedRecords,
+      processingTime,
+      fileMetadata,
+    };
+  }
+
   private extractRecordType(line: string): RecordTypeEnum | null {
     const parts = line.split('|');
     if (parts.length === 0) return null;

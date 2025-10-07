@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SchoolIdentificationRule } from './record-rules/school-identification.rule';
 import { SchoolCharacterizationRule } from './record-rules/school-characterization.rule';
 import { ClassesRule } from './record-rules/classes.rule';
+import { PhysicalPersonsRule } from './record-rules/physical-persons.rule';
 import { FileEndRule } from './record-rules/file-end.rule';
 import { BaseRecordRule } from './base-record.rule';
 import { RecordTypeEnum } from 'src/common/enums/record-types.enum';
@@ -15,6 +16,7 @@ export class RecordRulesManagerService {
     private readonly schoolIdentificationRule: SchoolIdentificationRule,
     private readonly schoolCharacterizationRule: SchoolCharacterizationRule,
     private readonly classesRule: ClassesRule,
+    private readonly physicalPersonsRule: PhysicalPersonsRule,
     private readonly fileEndRule: FileEndRule,
   ) {
     this.initializeRules();
@@ -31,11 +33,11 @@ export class RecordRulesManagerService {
       this.schoolCharacterizationRule,
     );
     this.rules.set(RecordTypeEnum.CLASSES, this.classesRule);
+    this.rules.set(RecordTypeEnum.PHYSICAL_PERSONS, this.physicalPersonsRule);
 
     this.rules.set(RecordTypeEnum.FILE_END, this.fileEndRule);
 
     // TODO: Adicionar outras regras conforme implementadas
-    // this.rules.set(RecordTypeEnum.PHYSICAL_PERSONS, this.physicalPersonsRule);
     // this.rules.set(RecordTypeEnum.SCHOOL_MANAGER_LINKS, this.schoolManagerLinksRule);
     // this.rules.set(RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS, this.schoolProfessionalLinksRule);
     // this.rules.set(RecordTypeEnum.STUDENT_LINKS, this.studentLinksRule);

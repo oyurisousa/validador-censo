@@ -947,10 +947,15 @@ export class ClassesRule extends BaseRecordRule {
 
     // Regra 5: Não podem todos os campos de 28 a 32 serem preenchidos com 0 (Não)
     const organizationPositions = [27, 28, 29, 30, 31]; // Posições dos campos 28-32
-    const allOrganizationZero = organizationPositions.every((position) => {
-      const value = parts[position];
-      return value === '0' || !value;
-    });
+    const organizationValues = organizationPositions.map(
+      (pos) => parts[pos] || '',
+    );
+    const organizationFilled = organizationValues.filter(
+      (value) => value !== '',
+    );
+    const allOrganizationZero =
+      organizationFilled.length > 0 &&
+      organizationFilled.every((value) => value === '0');
 
     if (allOrganizationZero) {
       errors.push({
@@ -991,10 +996,11 @@ export class ClassesRule extends BaseRecordRule {
 
     // Regra 7: Não podem todos os campos de 34 a 36 serem preenchidos com 0 (Não)
     const curricularPositions = [33, 34, 35]; // Posições dos campos 34-36
-    const allCurricularZero = curricularPositions.every((position) => {
-      const value = parts[position];
-      return value === '0' || !value;
-    });
+    const curricularValues = curricularPositions.map((pos) => parts[pos] || '');
+    const curricularFilled = curricularValues.filter((value) => value !== '');
+    const allCurricularZero =
+      curricularFilled.length > 0 &&
+      curricularFilled.every((value) => value === '0');
 
     if (allCurricularZero) {
       errors.push({
@@ -1016,11 +1022,11 @@ export class ClassesRule extends BaseRecordRule {
     const itinerarioAprofundamento = parts[34] || ''; // Campo 35 (posição 34)
     if (itinerarioAprofundamento === '1') {
       const itineraryPositions = [36, 37, 38, 39]; // Posições dos campos 37-40
-
-      const allItineraryZero = itineraryPositions.every((position) => {
-        const value = parts[position];
-        return value === '0' || !value;
-      });
+      const itineraryValues = itineraryPositions.map((pos) => parts[pos] || '');
+      const itineraryFilled = itineraryValues.filter((value) => value !== '');
+      const allItineraryZero =
+        itineraryFilled.length > 0 &&
+        itineraryFilled.every((value) => value === '0');
 
       if (allItineraryZero) {
         errors.push({
@@ -1045,10 +1051,11 @@ export class ClassesRule extends BaseRecordRule {
       60, 61, 62, 63, 64, 65, 66, 67, 68,
     ]; // Posições dos campos 43-69
 
-    const allComponentsZero = componentPositions.every((position) => {
-      const value = parts[position];
-      return value === '0' || !value;
-    });
+    const componentValues = componentPositions.map((pos) => parts[pos] || '');
+    const componentsFilled = componentValues.filter((value) => value !== '');
+    const allComponentsZero =
+      componentsFilled.length > 0 &&
+      componentsFilled.every((value) => value === '0');
 
     if (allComponentsZero) {
       errors.push({

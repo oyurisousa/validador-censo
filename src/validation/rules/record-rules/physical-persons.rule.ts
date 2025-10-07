@@ -855,11 +855,14 @@ export class PhysicalPersonsRule extends BaseRecordRule {
         });
       }
 
-      // Não pode ter mais de 4 caracteres iguais repetidos
-      const charCount: { [key: string]: number } = {};
-      for (const char of nomeCompleto) {
-        charCount[char] = (charCount[char] || 0) + 1;
-        if (charCount[char] > 4) {
+      // Não pode ter 4 ou mais caracteres iguais sequenciais
+      for (let i = 0; i <= nomeCompleto.length - 4; i++) {
+        const char = nomeCompleto[i];
+        if (
+          char === nomeCompleto[i + 1] &&
+          char === nomeCompleto[i + 2] &&
+          char === nomeCompleto[i + 3]
+        ) {
           errors.push({
             lineNumber,
             recordType: this.recordType,
@@ -868,7 +871,7 @@ export class PhysicalPersonsRule extends BaseRecordRule {
             fieldValue: nomeCompleto,
             ruleName: 'name_repeated_chars',
             errorMessage:
-              'Nome não pode ter mais de 4 caracteres iguais repetidos',
+              'Nome não pode ter 4 ou mais caracteres iguais sequenciais',
             severity: 'error',
           });
           break;

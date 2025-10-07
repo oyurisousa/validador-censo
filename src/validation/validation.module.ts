@@ -7,6 +7,7 @@ import { RecordRulesManagerService } from './rules/record-rules-manager.service'
 import { SchoolIdentificationRule } from './rules/record-rules/school-identification.rule';
 import { SchoolCharacterizationRule } from './rules/record-rules/school-characterization.rule';
 import { ClassesRule } from './rules/record-rules/classes.rule';
+import { PhysicalPersonsRule } from './rules/record-rules/physical-persons.rule';
 import { FileEndRule } from './rules/record-rules/file-end.rule';
 
 @Module({
@@ -19,6 +20,7 @@ import { FileEndRule } from './rules/record-rules/file-end.rule';
     SchoolIdentificationRule,
     SchoolCharacterizationRule,
     ClassesRule,
+    PhysicalPersonsRule,
     FileEndRule,
   ],
   exports: [

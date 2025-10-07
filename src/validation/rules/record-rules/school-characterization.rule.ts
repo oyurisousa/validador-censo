@@ -2185,12 +2185,12 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     // Regra 1: Campos 3-8 (Local de funcionamento da escola)
     // Pelo menos um deve ser preenchido com 1 (Sim)
     const locaisFuncionamento = [
-      parts[2] || '0', // Campo 3 - Prédio escolar
-      parts[3] || '0', // Campo 4 - Sala(s) em outra escola
-      parts[4] || '0', // Campo 5 - Galpão/rancho/paiol/barracão
-      parts[5] || '0', // Campo 6 - Casa do professor
-      parts[6] || '0', // Campo 7 - Templo/igreja
-      parts[7] || '0', // Campo 8 - Outros
+      parts[2] || '', // Campo 3 - Prédio escolar
+      parts[3] || '', // Campo 4 - Sala(s) em outra escola
+      parts[4] || '', // Campo 5 - Galpão/rancho/paiol/barracão
+      parts[5] || '', // Campo 6 - Casa do professor
+      parts[6] || '', // Campo 7 - Templo/igreja
+      parts[7] || '', // Campo 8 - Outros
     ];
 
     if (!locaisFuncionamento.some((valor) => valor === '1')) {
@@ -2233,13 +2233,14 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 3: Campos 18-23 (Abastecimento de água)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const abastecimentoAgua = [
-      parts[17] || '0',
-      parts[18] || '0',
-      parts[19] || '0',
-      parts[20] || '0',
-      parts[21] || '0',
-      parts[22] || '0',
+      parts[17] || '',
+      parts[18] || '',
+      parts[19] || '',
+      parts[20] || '',
+      parts[21] || '',
+      parts[22] || '',
     ];
 
     if (!abastecimentoAgua.some((valor) => valor === '1')) {
@@ -2257,11 +2258,12 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 4: Campos 24-27 (Fonte de energia elétrica)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const fonteEnergia = [
-      parts[23] || '0',
-      parts[24] || '0',
-      parts[25] || '0',
-      parts[26] || '0',
+      parts[23] || '',
+      parts[24] || '',
+      parts[25] || '',
+      parts[26] || '',
     ];
 
     if (!fonteEnergia.some((valor) => valor === '1')) {
@@ -2279,11 +2281,12 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 5: Campos 28-31 (Esgotamento sanitário)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const esgotamento = [
-      parts[27] || '0',
-      parts[28] || '0',
-      parts[29] || '0',
-      parts[30] || '0',
+      parts[27] || '',
+      parts[28] || '',
+      parts[29] || '',
+      parts[30] || '',
     ];
 
     if (!esgotamento.some((valor) => valor === '1')) {
@@ -2301,12 +2304,13 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 6: Campos 32-36 (Destinação do lixo)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const destinacaoLixo = [
-      parts[31] || '0',
-      parts[32] || '0',
-      parts[33] || '0',
-      parts[34] || '0',
-      parts[35] || '0',
+      parts[31] || '',
+      parts[32] || '',
+      parts[33] || '',
+      parts[34] || '',
+      parts[35] || '',
     ];
 
     if (!destinacaoLixo.some((valor) => valor === '1')) {
@@ -2324,31 +2328,38 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 7: Campos 37-40 (Tratamento do lixo/resíduos)
+    // Não podem todos os campos serem preenchidos com 0 (Não)
     const tratamentoLixo = [
-      parts[36] || '0',
-      parts[37] || '0',
-      parts[38] || '0',
-      parts[39] || '0',
+      parts[36] || '', // Mantém vazio se não preenchido
+      parts[37] || '',
+      parts[38] || '',
+      parts[39] || '',
     ];
 
-    if (tratamentoLixo.every((valor) => valor === '0')) {
+    // Verifica se todos os campos preenchidos são "0" (não pode)
+    const camposPreenchidos = tratamentoLixo.filter((valor) => valor !== '');
+    if (
+      camposPreenchidos.length > 0 &&
+      camposPreenchidos.every((valor) => valor === '0')
+    ) {
       errors.push({
         lineNumber,
         recordType: this.recordType,
         fieldName: 'tratamento_lixo_validation',
         fieldPosition: 36,
         fieldValue: tratamentoLixo.join('|'),
-        ruleName: 'tratamento_lixo_required',
+        ruleName: 'tratamento_lixo_all_no',
         errorMessage:
-          'Pelo menos uma opção de tratamento de lixo deve ser informada',
+          'Não podem todos os campos de tratamento de lixo serem preenchidos com 0 (Não)',
         severity: 'error',
       });
     }
 
     // Regra 8: Campos 41-79 (Dependências físicas existentes)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const dependenciasFisicas: string[] = [];
     for (let i = 40; i < 79; i++) {
-      dependenciasFisicas.push(parts[i] || '0');
+      dependenciasFisicas.push(parts[i] || '');
     }
 
     if (!dependenciasFisicas.some((valor) => valor === '1')) {
@@ -2365,9 +2376,10 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 9: Campos 80-89 (Recursos de acessibilidade)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const recursosAcessibilidade: string[] = [];
     for (let i = 79; i < 89; i++) {
-      recursosAcessibilidade.push(parts[i] || '0');
+      recursosAcessibilidade.push(parts[i] || '');
     }
 
     if (!recursosAcessibilidade.some((valor) => valor === '1')) {
@@ -2385,12 +2397,19 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 10: Campos 95-101 (Equipamentos técnicos e administrativos)
+    // Não podem todos os campos serem preenchidos com 0 (Não)
     const equipamentosTecnicos: string[] = [];
     for (let i = 94; i < 101; i++) {
-      equipamentosTecnicos.push(parts[i] || '0');
+      equipamentosTecnicos.push(parts[i] || '');
     }
 
-    if (equipamentosTecnicos.every((valor) => valor === '0')) {
+    const equipamentosPreenchidos = equipamentosTecnicos.filter(
+      (valor) => valor !== '',
+    );
+    if (
+      equipamentosPreenchidos.length > 0 &&
+      equipamentosPreenchidos.every((valor) => valor === '0')
+    ) {
       errors.push({
         lineNumber,
         recordType: this.recordType,
@@ -2399,15 +2418,16 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
         fieldValue: equipamentosTecnicos.join('|'),
         ruleName: 'equipamentos_tecnicos_required',
         errorMessage:
-          'Pelo menos um equipamento técnico/administrativo deve ser informado',
+          'Não podem todos os campos de equipamentos técnicos serem preenchidos com 0 (Não)',
         severity: 'error',
       });
     }
 
     // Regra 11: Campos 110-114 (Acesso à internet)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
     const acessoInternet: string[] = [];
     for (let i = 109; i < 114; i++) {
-      acessoInternet.push(parts[i] || '0');
+      acessoInternet.push(parts[i] || '');
     }
 
     if (!acessoInternet.some((valor) => valor === '1')) {
@@ -2425,9 +2445,14 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 12: Campos 118-120 (Rede local de computadores)
-    const redeLocal = [parts[117] || '0', parts[118] || '0', parts[119] || '0'];
+    // Não podem todos os campos serem preenchidos com 0 (Não)
+    const redeLocal = [parts[117] || '', parts[118] || '', parts[119] || ''];
 
-    if (redeLocal.every((valor) => valor === '0')) {
+    const redePreenchida = redeLocal.filter((valor) => valor !== '');
+    if (
+      redePreenchida.length > 0 &&
+      redePreenchida.every((valor) => valor === '0')
+    ) {
       errors.push({
         lineNumber,
         recordType: this.recordType,
@@ -2435,7 +2460,8 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
         fieldPosition: 117,
         fieldValue: redeLocal.join('|'),
         ruleName: 'rede_local_required',
-        errorMessage: 'Pelo menos uma opção de rede local deve ser informada',
+        errorMessage:
+          'Não podem todos os campos de rede local serem preenchidos com 0 (Não)',
         severity: 'error',
       });
     }
@@ -2478,27 +2504,35 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 15: Campos 141-157 (Materiais socioculturais/pedagógicos)
+    // Não podem todos os campos serem preenchidos com 0 (Não)
     const materiaisPedagogicos: string[] = [];
     for (let i = 140; i < 157; i++) {
-      materiaisPedagogicos.push(parts[i] || '0');
+      materiaisPedagogicos.push(parts[i] || '');
     }
 
-    if (materiaisPedagogicos.every((valor) => valor === '0')) {
+    const materiaisPreenchidos = materiaisPedagogicos.filter(
+      (valor) => valor !== '',
+    );
+    if (
+      materiaisPreenchidos.length > 0 &&
+      materiaisPreenchidos.every((valor) => valor === '0')
+    ) {
       errors.push({
         lineNumber,
         recordType: this.recordType,
         fieldName: 'materiais_pedagogicos_validation',
         fieldPosition: 140,
         fieldValue: materiaisPedagogicos.slice(0, 5).join('|') + '...',
-        ruleName: 'materiais_pedagogicos_required',
-        errorMessage: 'Pelo menos um material pedagógico deve ser informado',
+        ruleName: 'materiais_pedagogicos_all_no',
+        errorMessage:
+          'Não podem todos os campos de materiais pedagógicos serem preenchidos com 0 (Não)',
         severity: 'error',
       });
     }
 
     // Regra 16: Campos 159-160 (Língua de ensino)
-    const linguaIndigena = parts[158] || '0'; // Campo 159
-    const linguaPortuguesa = parts[159] || '0'; // Campo 160
+    const linguaIndigena = parts[158] || ''; // Campo 159
+    const linguaPortuguesa = parts[159] || ''; // Campo 160
 
     if (linguaIndigena === '0' && linguaPortuguesa === '0') {
       errors.push({
@@ -2518,7 +2552,7 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     if (fazExameSelecao === '1') {
       const reservaVagas: string[] = [];
       for (let i = 164; i < 170; i++) {
-        reservaVagas.push(parts[i] || '0');
+        reservaVagas.push(parts[i] || '');
       }
 
       if (!reservaVagas.some((valor) => valor === '1')) {
@@ -2537,20 +2571,26 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     // Regra 18: Campos 174-179 (Órgãos colegiados)
+    // Não podem todos os campos serem preenchidos com 0 (Não)
     const orgaosColegiados: string[] = [];
     for (let i = 173; i < 179; i++) {
-      orgaosColegiados.push(parts[i] || '0');
+      orgaosColegiados.push(parts[i] || '');
     }
 
-    if (orgaosColegiados.every((valor) => valor === '0')) {
+    const orgaosPreenchidos = orgaosColegiados.filter((valor) => valor !== '');
+    if (
+      orgaosPreenchidos.length > 0 &&
+      orgaosPreenchidos.every((valor) => valor === '0')
+    ) {
       errors.push({
         lineNumber,
         recordType: this.recordType,
         fieldName: 'orgaos_colegiados_validation',
         fieldPosition: 173,
         fieldValue: orgaosColegiados.join('|'),
-        ruleName: 'orgaos_colegiados_required',
-        errorMessage: 'Pelo menos um órgão colegiado deve ser informado',
+        ruleName: 'orgaos_colegiados_all_no',
+        errorMessage:
+          'Não podem todos os campos de órgãos colegiados serem preenchidos com 0 (Não)',
         severity: 'error',
       });
     }
@@ -2560,7 +2600,7 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     if (desenvolveEducacaoAmbiental === '1') {
       const formasEducacaoAmbiental: string[] = [];
       for (let i = 181; i < 187; i++) {
-        formasEducacaoAmbiental.push(parts[i] || '0');
+        formasEducacaoAmbiental.push(parts[i] || '');
       }
 
       if (!formasEducacaoAmbiental.some((valor) => valor === '1')) {

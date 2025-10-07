@@ -8,6 +8,7 @@ import {
   UseFilters,
   BadRequestException,
 } from '@nestjs/common';
+import * as fs from 'fs/promises';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -22,6 +23,7 @@ import {
   ValidationRequestDto,
   ValidationResultDto,
 } from '../../common/dto/validation.dto';
+import { ValidationResult } from '../../common/interfaces/validation.interface';
 import { FileUploadGuard } from '../guards/file-upload.guard';
 import { ValidationGuard } from '../guards/validation.guard';
 import { RateLimitGuard } from '../guards/rate-limit.guard';
@@ -38,7 +40,8 @@ export class ValidationController {
   @UseInterceptors(ValidationLoggingInterceptor)
   @ApiOperation({
     summary: 'Validar conteúdo do arquivo',
-    description: 'Valida o conteúdo de um arquivo TXT do Censo Escolar',
+    description:
+      'Valida registros do Censo Escolar. Suporta três formatos: lista de registros (recomendado), conteúdo concatenado ou arquivo do sistema.',
   })
   @ApiResponse({
     status: 200,
@@ -56,28 +59,39 @@ export class ValidationController {
   async validateContent(
     @Body() request: ValidationRequestDto,
   ): Promise<ValidationResultDto> {
-    let content: string;
+    let result: ValidationResult;
     let fileName: string;
 
-    if (request.content) {
-      content = request.content;
+    if (request.records && request.records.length > 0) {
+      // Validação via lista de registros (formato preferido)
+      fileName = 'records.txt';
+      result = await this.validationEngine.validateRecords(
+        request.records,
+        fileName,
+        request.version || '2025',
+      );
+    } else if (request.content) {
+      // Validação via conteúdo concatenado (formato legado)
       fileName = 'uploaded_file.txt';
+      result = await this.validationEngine.validateFile(
+        request.content,
+        fileName,
+        request.version || '2025',
+      );
     } else if (request.filePath) {
-      // Implementar leitura do arquivo do caminho fornecido
-      const fs = require('fs').promises;
-      content = await fs.readFile(request.filePath, 'utf-8');
+      // Validação via arquivo do sistema
+      const content = await fs.readFile(request.filePath, 'utf-8');
       fileName = request.filePath.split('/').pop() || 'file.txt';
+      result = await this.validationEngine.validateFile(
+        content,
+        fileName,
+        request.version || '2025',
+      );
     } else {
       throw new BadRequestException(
-        'Conteúdo do arquivo ou caminho do arquivo é obrigatório',
+        'É obrigatório fornecer: records (lista de registros), content (conteúdo) ou filePath (caminho do arquivo)',
       );
     }
-
-    const result = await this.validationEngine.validateFile(
-      content,
-      fileName,
-      request.version || '2025',
-    );
 
     // Converter Date para string para compatibilidade com DTO
     const resultDto = {

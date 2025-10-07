@@ -775,10 +775,10 @@ export class SchoolIdentificationRule extends BaseRecordRule {
     // Regra 2: Campos 22-25 (Órgão ao qual a escola pública está vinculada)
     const dependenciaAdministrativa = parts[20] || ''; // Campo 21 (posição 20)
     if (['1', '2', '3'].includes(dependenciaAdministrativa)) {
-      const vinculoSecEducacao = parts[21] || '0'; // Campo 22 (posição 21)
-      const vinculoSecSeguranca = parts[22] || '0'; // Campo 23 (posição 22)
-      const vinculoSecSaude = parts[23] || '0'; // Campo 24 (posição 23)
-      const vinculoOutroOrgao = parts[24] || '0'; // Campo 25 (posição 24)
+      const vinculoSecEducacao = parts[21] || ''; // Campo 22 (posição 21)
+      const vinculoSecSeguranca = parts[22] || ''; // Campo 23 (posição 22)
+      const vinculoSecSaude = parts[23] || ''; // Campo 24 (posição 23)
+      const vinculoOutroOrgao = parts[24] || ''; // Campo 25 (posição 24)
 
       const temVinculo = [
         vinculoSecEducacao,
@@ -805,12 +805,12 @@ export class SchoolIdentificationRule extends BaseRecordRule {
     // Regra 3: Campos 26-31 (Mantenedora da escola privada)
     const situacaoFuncionamento = parts[2] || ''; // Campo 3 (posição 2)
     if (situacaoFuncionamento === '1' && dependenciaAdministrativa === '4') {
-      const mantenedoraEmpresa = parts[25] || '0'; // Campo 26 (posição 25)
-      const mantenedoraSindicatos = parts[26] || '0'; // Campo 27 (posição 26)
-      const mantenedoraOng = parts[27] || '0'; // Campo 28 (posição 27)
-      const mantenedoraInstituicao = parts[28] || '0'; // Campo 29 (posição 28)
-      const mantenedoraSistemaS = parts[29] || '0'; // Campo 30 (posição 29)
-      const mantenedoraOscip = parts[30] || '0'; // Campo 31 (posição 30)
+      const mantenedoraEmpresa = parts[25] || ''; // Campo 26 (posição 25)
+      const mantenedoraSindicatos = parts[26] || ''; // Campo 27 (posição 26)
+      const mantenedoraOng = parts[27] || ''; // Campo 28 (posição 27)
+      const mantenedoraInstituicao = parts[28] || ''; // Campo 29 (posição 28)
+      const mantenedoraSistemaS = parts[29] || ''; // Campo 30 (posição 29)
+      const mantenedoraOscip = parts[30] || ''; // Campo 31 (posição 30)
 
       const temMantenedora = [
         mantenedoraEmpresa,
@@ -839,12 +839,12 @@ export class SchoolIdentificationRule extends BaseRecordRule {
     // Regra 4: Campos 36-41 (Formas de contratação da parceria estadual)
     const parceriaEstadual = parts[32] || ''; // Campo 33 (posição 32)
     if (parceriaEstadual === '1') {
-      const termoColaboracaoEst = parts[35] || '0'; // Campo 36 (posição 35)
-      const termoFomentoEst = parts[36] || '0'; // Campo 37 (posição 36)
-      const acordoCooperacaoEst = parts[37] || '0'; // Campo 38 (posição 37)
-      const contratoPrestacaoEst = parts[38] || '0'; // Campo 39 (posição 38)
-      const cooperacaoTecnicaEst = parts[39] || '0'; // Campo 40 (posição 39)
-      const consorcioEst = parts[40] || '0'; // Campo 41 (posição 40)
+      const termoColaboracaoEst = parts[35] || ''; // Campo 36 (posição 35)
+      const termoFomentoEst = parts[36] || ''; // Campo 37 (posição 36)
+      const acordoCooperacaoEst = parts[37] || ''; // Campo 38 (posição 37)
+      const contratoPrestacaoEst = parts[38] || ''; // Campo 39 (posição 38)
+      const cooperacaoTecnicaEst = parts[39] || ''; // Campo 40 (posição 39)
+      const consorcioEst = parts[40] || ''; // Campo 41 (posição 40)
 
       const temContratoEstadual = [
         termoColaboracaoEst,
@@ -873,12 +873,12 @@ export class SchoolIdentificationRule extends BaseRecordRule {
     // Regra 5: Campos 42-47 (Formas de contratação da parceria municipal)
     const parceriaMunicipal = parts[33] || ''; // Campo 34 (posição 33)
     if (parceriaMunicipal === '1') {
-      const termoColaboracaoMun = parts[41] || '0'; // Campo 42 (posição 41)
-      const termoFomentoMun = parts[42] || '0'; // Campo 43 (posição 42)
-      const acordoCooperacaoMun = parts[43] || '0'; // Campo 44 (posição 43)
-      const contratoPrestacaoMun = parts[44] || '0'; // Campo 45 (posição 44)
-      const cooperacaoTecnicaMun = parts[45] || '0'; // Campo 46 (posição 45)
-      const consorcioMun = parts[46] || '0'; // Campo 47 (posição 46)
+      const termoColaboracaoMun = parts[41] || ''; // Campo 42 (posição 41)
+      const termoFomentoMun = parts[42] || ''; // Campo 43 (posição 42)
+      const acordoCooperacaoMun = parts[43] || ''; // Campo 44 (posição 43)
+      const contratoPrestacaoMun = parts[44] || ''; // Campo 45 (posição 44)
+      const cooperacaoTecnicaMun = parts[45] || ''; // Campo 46 (posição 45)
+      const consorcioMun = parts[46] || ''; // Campo 47 (posição 46)
 
       const temContratoMunicipal = [
         termoColaboracaoMun,
@@ -907,9 +907,9 @@ export class SchoolIdentificationRule extends BaseRecordRule {
     // Regra 6: Campos 51-53 (Esfera administrativa do conselho)
     const regulamentacaoAutorizacao = parts[49] || ''; // Campo 50 (posição 49)
     if (['1', '2'].includes(regulamentacaoAutorizacao)) {
-      const esferaFederal = parts[50] || '0'; // Campo 51 (posição 50)
-      const esferaEstadual = parts[51] || '0'; // Campo 52 (posição 51)
-      const esferaMunicipal = parts[52] || '0'; // Campo 53 (posição 52)
+      const esferaFederal = parts[50] || ''; // Campo 51 (posição 50)
+      const esferaEstadual = parts[51] || ''; // Campo 52 (posição 51)
+      const esferaMunicipal = parts[52] || ''; // Campo 53 (posição 52)
 
       const temEsfera = [esferaFederal, esferaEstadual, esferaMunicipal].some(
         (valor) => valor === '1',

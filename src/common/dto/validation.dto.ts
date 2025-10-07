@@ -178,9 +178,8 @@ export class ValidationResultDto {
 
 export class ValidationRequestDto {
   @ApiPropertyOptional({
-    description:
-      'Caminho para o arquivo a ser validado (alternativo ao content)',
-    example: '/path/to/censo_escolar_2025.txt',
+    description: 'Caminho para arquivo do sistema de arquivos (uso interno)',
+    example: '/uploads/censo_escolar_2025.txt',
   })
   @IsString()
   @IsOptional()
@@ -188,12 +187,31 @@ export class ValidationRequestDto {
 
   @ApiPropertyOptional({
     description:
-      'Conteúdo do arquivo TXT a ser validado (alternativo ao filePath)',
-    example: '00|12345678|ESCOLA EXEMPLO|...\n10|001|ALUNO EXEMPLO|...\n99',
+      'Conteúdo completo do arquivo como string única com quebras de linha (\\n) - FORMATO LEGADO',
+    example:
+      '00|12345678|ESCOLA EXEMPLO|3|1|0|Rua das Flores 123|Centro|12345000|27|1234567|São Paulo|SP|Brasil|123456789|escola@exemplo.com',
   })
   @IsString()
   @IsOptional()
   content?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '🚀 FORMATO RECOMENDADO: Array de strings onde cada elemento é um registro completo. Exemplo: para 3 turmas, envie 3 elementos no array, cada um com registro "20|..."',
+    example: [
+      '00|12345678|ESCOLA MUNICIPAL EXEMPLO|3|1|0|Rua das Flores 123|Centro|12345000|27|1234567|São Paulo|SP|Brasil|11987654321|escola@exemplo.com.br',
+      '10|12345678|001|Sala de Aula|1|1|1|0|1|35|30|1|1|1|0|0|1|1|1|1|1|1|1|1|1|1|1|1|1|1',
+      '20|12345678|001|1|14|1|1|1|Turma 1º Ano A|1|1|30|0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0',
+      '30|12345678|ALU001|123456789012|12345678901|JOAO DA SILVA SANTOS|15/08/2015|1|MARIA DA SILVA|JOSE SANTOS|1|1||1|76|1234567|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|1||76|12345000|1234567|1|7',
+      '99',
+    ],
+    isArray: true,
+    type: [String],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  records?: string[];
 
   @ApiPropertyOptional({
     description: 'Versão do layout do Censo Escolar',
