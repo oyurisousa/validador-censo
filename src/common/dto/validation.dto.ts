@@ -33,6 +33,14 @@ export class ValidationErrorDto {
   @IsString()
   fieldName: string;
 
+  @ApiPropertyOptional({
+    description: 'Posição/número do campo (0-based)',
+    example: 2,
+  })
+  @IsNumber()
+  @IsOptional()
+  fieldPosition?: number;
+
   @ApiProperty({
     description: 'Valor do campo que causou o erro',
     example: '12345678',
@@ -115,6 +123,7 @@ export class ValidationResultDto {
         lineNumber: 1,
         recordType: 'SCHOOL_IDENTIFICATION',
         fieldName: 'co_entidade',
+        fieldPosition: 2,
         fieldValue: '12345678',
         ruleName: 'required_field',
         errorMessage: 'Campo obrigatório não foi preenchido',

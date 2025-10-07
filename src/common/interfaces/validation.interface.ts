@@ -2,6 +2,7 @@ export interface ValidationError {
   lineNumber: number;
   recordType: string;
   fieldName: string;
+  fieldPosition?: number; // Opcional temporariamente para compatibilidade
   fieldValue: string;
   ruleName: string;
   errorMessage: string;

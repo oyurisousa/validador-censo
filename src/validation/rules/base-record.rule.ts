@@ -49,6 +49,10 @@ export abstract class BaseRecordRule {
       errors.push(...fieldErrors);
     });
 
+    // Validar regras de negócio entre campos
+    const businessRuleErrors = this.validateBusinessRules(parts, lineNumber);
+    errors.push(...businessRuleErrors);
+
     return errors;
   }
 
@@ -66,6 +70,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: 'field_count',
+        fieldPosition: -1, // -1 indica erro geral do registro
         fieldValue: parts.length.toString(),
         ruleName: 'field_count_validation',
         errorMessage: `Registro ${this.recordType} deve ter pelo menos ${this.fields.length} campos`,
@@ -100,6 +105,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'required_field',
         errorMessage: `${field.description} é obrigatório`,
@@ -119,6 +125,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'min_length',
         errorMessage: `${field.description} deve ter pelo menos ${field.minLength} caracteres`,
@@ -132,6 +139,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'max_length',
         errorMessage: `${field.description} deve ter no máximo ${field.maxLength} caracteres`,
@@ -145,6 +153,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'pattern_validation',
         errorMessage: `${field.description} tem formato inválido`,
@@ -176,6 +185,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'numeric_validation',
             errorMessage: `${field.description} deve ser numérico`,
@@ -194,6 +204,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'date_validation',
             errorMessage: `${field.description} deve estar no formato DD/MM/YYYY`,
@@ -219,6 +230,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'date_validation',
             errorMessage: `${field.description} deve ser uma data válida`,
@@ -301,5 +313,17 @@ export abstract class BaseRecordRule {
       conditionalRequired.andValues.includes(andValue);
 
     return matchesMainCondition && matchesAndCondition;
+  }
+
+  /**
+   * Valida regras de negócio entre campos
+   * Método que pode ser sobrescrito pelas classes filhas para implementar validações específicas
+   */
+  protected validateBusinessRules(
+    parts: string[],
+    lineNumber: number,
+  ): ValidationError[] {
+    // Implementação padrão vazia - classes filhas podem sobrescrever
+    return [];
   }
 }

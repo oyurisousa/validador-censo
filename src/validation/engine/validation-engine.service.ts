@@ -54,6 +54,7 @@ export class ValidationEngineService {
             lineNumber,
             recordType: 'UNKNOWN',
             fieldName: 'record_type',
+            fieldPosition: 0,
             fieldValue: line.substring(0, 10),
             ruleName: 'record_type_identification',
             errorMessage: 'Tipo de registro não identificado',
@@ -87,9 +88,10 @@ export class ValidationEngineService {
           lineNumber,
           recordType: 'UNKNOWN',
           fieldName: 'line_processing',
+          fieldPosition: -1,
           fieldValue: line.substring(0, 50),
           ruleName: 'line_processing_error',
-          errorMessage: `Erro ao processar linha: ${error.message}`,
+          errorMessage: `Erro ao processar linha: ${(error as Error).message}`,
           severity: ValidationSeverity.ERROR,
         });
       }

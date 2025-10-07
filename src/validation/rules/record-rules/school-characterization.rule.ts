@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
+import { ValidationError } from '../../../common/interfaces/validation.interface';
 
 @Injectable()
 export class SchoolCharacterizationRule extends BaseRecordRule {
@@ -2171,4 +2172,412 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       },
     },
   ];
+
+  /**
+   * Valida regras de negócio específicas para Caracterização da Escola
+   */
+  protected validateBusinessRules(
+    parts: string[],
+    lineNumber: number,
+  ): ValidationError[] {
+    const errors: ValidationError[] = [];
+
+    // Regra 1: Campos 3-8 (Local de funcionamento da escola)
+    // Pelo menos um deve ser preenchido com 1 (Sim)
+    const locaisFuncionamento = [
+      parts[2] || '0', // Campo 3 - Prédio escolar
+      parts[3] || '0', // Campo 4 - Sala(s) em outra escola
+      parts[4] || '0', // Campo 5 - Galpão/rancho/paiol/barracão
+      parts[5] || '0', // Campo 6 - Casa do professor
+      parts[6] || '0', // Campo 7 - Templo/igreja
+      parts[7] || '0', // Campo 8 - Outros
+    ];
+
+    if (!locaisFuncionamento.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'local_funcionamento_validation',
+        fieldPosition: 2,
+        fieldValue: locaisFuncionamento.join('|'),
+        ruleName: 'local_funcionamento_required',
+        errorMessage: 'Pelo menos um local de funcionamento deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 2: Campos 11-16 (Código da escola com a qual compartilha)
+    // Não pode haver dois códigos iguais
+    const codigosEscolaCompartilha = [
+      parts[10],
+      parts[11],
+      parts[12],
+      parts[13],
+      parts[14],
+      parts[15],
+    ].filter((codigo) => codigo && codigo.trim() !== '');
+
+    const codigosUnicos = new Set(codigosEscolaCompartilha);
+    if (codigosEscolaCompartilha.length > codigosUnicos.size) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'codigos_escola_compartilha_validation',
+        fieldPosition: 10,
+        fieldValue: codigosEscolaCompartilha.join('|'),
+        ruleName: 'codigos_escola_compartilha_duplicated',
+        errorMessage:
+          'Não pode haver códigos de escola compartilhada duplicados',
+        severity: 'error',
+      });
+    }
+
+    // Regra 3: Campos 18-23 (Abastecimento de água)
+    const abastecimentoAgua = [
+      parts[17] || '0',
+      parts[18] || '0',
+      parts[19] || '0',
+      parts[20] || '0',
+      parts[21] || '0',
+      parts[22] || '0',
+    ];
+
+    if (!abastecimentoAgua.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'abastecimento_agua_validation',
+        fieldPosition: 17,
+        fieldValue: abastecimentoAgua.join('|'),
+        ruleName: 'abastecimento_agua_required',
+        errorMessage:
+          'Pelo menos uma opção de abastecimento de água deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 4: Campos 24-27 (Fonte de energia elétrica)
+    const fonteEnergia = [
+      parts[23] || '0',
+      parts[24] || '0',
+      parts[25] || '0',
+      parts[26] || '0',
+    ];
+
+    if (!fonteEnergia.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'fonte_energia_validation',
+        fieldPosition: 23,
+        fieldValue: fonteEnergia.join('|'),
+        ruleName: 'fonte_energia_required',
+        errorMessage:
+          'Pelo menos uma fonte de energia elétrica deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 5: Campos 28-31 (Esgotamento sanitário)
+    const esgotamento = [
+      parts[27] || '0',
+      parts[28] || '0',
+      parts[29] || '0',
+      parts[30] || '0',
+    ];
+
+    if (!esgotamento.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'esgotamento_sanitario_validation',
+        fieldPosition: 27,
+        fieldValue: esgotamento.join('|'),
+        ruleName: 'esgotamento_sanitario_required',
+        errorMessage:
+          'Pelo menos uma opção de esgotamento sanitário deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 6: Campos 32-36 (Destinação do lixo)
+    const destinacaoLixo = [
+      parts[31] || '0',
+      parts[32] || '0',
+      parts[33] || '0',
+      parts[34] || '0',
+      parts[35] || '0',
+    ];
+
+    if (!destinacaoLixo.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'destinacao_lixo_validation',
+        fieldPosition: 31,
+        fieldValue: destinacaoLixo.join('|'),
+        ruleName: 'destinacao_lixo_required',
+        errorMessage:
+          'Pelo menos uma opção de destinação do lixo deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 7: Campos 37-40 (Tratamento do lixo/resíduos)
+    const tratamentoLixo = [
+      parts[36] || '0',
+      parts[37] || '0',
+      parts[38] || '0',
+      parts[39] || '0',
+    ];
+
+    if (tratamentoLixo.every((valor) => valor === '0')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'tratamento_lixo_validation',
+        fieldPosition: 36,
+        fieldValue: tratamentoLixo.join('|'),
+        ruleName: 'tratamento_lixo_required',
+        errorMessage:
+          'Pelo menos uma opção de tratamento de lixo deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 8: Campos 41-79 (Dependências físicas existentes)
+    const dependenciasFisicas: string[] = [];
+    for (let i = 40; i < 79; i++) {
+      dependenciasFisicas.push(parts[i] || '0');
+    }
+
+    if (!dependenciasFisicas.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'dependencias_fisicas_validation',
+        fieldPosition: 40,
+        fieldValue: dependenciasFisicas.slice(0, 5).join('|') + '...',
+        ruleName: 'dependencias_fisicas_required',
+        errorMessage: 'Pelo menos uma dependência física deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 9: Campos 80-89 (Recursos de acessibilidade)
+    const recursosAcessibilidade: string[] = [];
+    for (let i = 79; i < 89; i++) {
+      recursosAcessibilidade.push(parts[i] || '0');
+    }
+
+    if (!recursosAcessibilidade.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'recursos_acessibilidade_validation',
+        fieldPosition: 79,
+        fieldValue: recursosAcessibilidade.join('|'),
+        ruleName: 'recursos_acessibilidade_required',
+        errorMessage:
+          'Pelo menos um recurso de acessibilidade deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 10: Campos 95-101 (Equipamentos técnicos e administrativos)
+    const equipamentosTecnicos: string[] = [];
+    for (let i = 94; i < 101; i++) {
+      equipamentosTecnicos.push(parts[i] || '0');
+    }
+
+    if (equipamentosTecnicos.every((valor) => valor === '0')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'equipamentos_tecnicos_validation',
+        fieldPosition: 94,
+        fieldValue: equipamentosTecnicos.join('|'),
+        ruleName: 'equipamentos_tecnicos_required',
+        errorMessage:
+          'Pelo menos um equipamento técnico/administrativo deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 11: Campos 110-114 (Acesso à internet)
+    const acessoInternet: string[] = [];
+    for (let i = 109; i < 114; i++) {
+      acessoInternet.push(parts[i] || '0');
+    }
+
+    if (!acessoInternet.some((valor) => valor === '1')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'acesso_internet_validation',
+        fieldPosition: 109,
+        fieldValue: acessoInternet.join('|'),
+        ruleName: 'acesso_internet_required',
+        errorMessage:
+          'Pelo menos uma opção de acesso à internet deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 12: Campos 118-120 (Rede local de computadores)
+    const redeLocal = [parts[117] || '0', parts[118] || '0', parts[119] || '0'];
+
+    if (redeLocal.every((valor) => valor === '0')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'rede_local_validation',
+        fieldPosition: 117,
+        fieldValue: redeLocal.join('|'),
+        ruleName: 'rede_local_required',
+        errorMessage: 'Pelo menos uma opção de rede local deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 13: Campos 121-139 (Total de profissionais)
+    const totalProfissionais: string[] = [];
+    for (let i = 120; i < 139; i++) {
+      const valor = parts[i];
+      if (valor && valor.trim() !== '') {
+        totalProfissionais.push(valor);
+      }
+    }
+
+    if (totalProfissionais.length === 0) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'total_profissionais_validation',
+        fieldPosition: 120,
+        fieldValue: '',
+        ruleName: 'total_profissionais_required',
+        errorMessage: 'Pelo menos um total de profissionais deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 14: Campo 139 (Não há funcionários) - validação especial
+    const naoHaFuncionarios = parts[138] || '';
+    if (naoHaFuncionarios && naoHaFuncionarios !== '1') {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'nao_ha_funcionarios_validation',
+        fieldPosition: 138,
+        fieldValue: naoHaFuncionarios,
+        ruleName: 'nao_ha_funcionarios_invalid_value',
+        errorMessage: 'Campo "Não há funcionários" só aceita o valor 1 (Sim)',
+        severity: 'error',
+      });
+    }
+
+    // Regra 15: Campos 141-157 (Materiais socioculturais/pedagógicos)
+    const materiaisPedagogicos: string[] = [];
+    for (let i = 140; i < 157; i++) {
+      materiaisPedagogicos.push(parts[i] || '0');
+    }
+
+    if (materiaisPedagogicos.every((valor) => valor === '0')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'materiais_pedagogicos_validation',
+        fieldPosition: 140,
+        fieldValue: materiaisPedagogicos.slice(0, 5).join('|') + '...',
+        ruleName: 'materiais_pedagogicos_required',
+        errorMessage: 'Pelo menos um material pedagógico deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 16: Campos 159-160 (Língua de ensino)
+    const linguaIndigena = parts[158] || '0'; // Campo 159
+    const linguaPortuguesa = parts[159] || '0'; // Campo 160
+
+    if (linguaIndigena === '0' && linguaPortuguesa === '0') {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'lingua_ensino_validation',
+        fieldPosition: 158,
+        fieldValue: `${linguaIndigena}|${linguaPortuguesa}`,
+        ruleName: 'lingua_ensino_required',
+        errorMessage: 'Pelo menos uma língua de ensino deve ser informada',
+        severity: 'error',
+      });
+    }
+
+    // Regra 17: Campos 165-170 (Reserva de vagas por cotas)
+    const fazExameSelecao = parts[163] || ''; // Campo 164
+    if (fazExameSelecao === '1') {
+      const reservaVagas: string[] = [];
+      for (let i = 164; i < 170; i++) {
+        reservaVagas.push(parts[i] || '0');
+      }
+
+      if (!reservaVagas.some((valor) => valor === '1')) {
+        errors.push({
+          lineNumber,
+          recordType: this.recordType,
+          fieldName: 'reserva_vagas_validation',
+          fieldPosition: 164,
+          fieldValue: reservaVagas.join('|'),
+          ruleName: 'reserva_vagas_required',
+          errorMessage:
+            'Pelo menos uma opção de reserva de vagas deve ser informada quando há exame de seleção',
+          severity: 'error',
+        });
+      }
+    }
+
+    // Regra 18: Campos 174-179 (Órgãos colegiados)
+    const orgaosColegiados: string[] = [];
+    for (let i = 173; i < 179; i++) {
+      orgaosColegiados.push(parts[i] || '0');
+    }
+
+    if (orgaosColegiados.every((valor) => valor === '0')) {
+      errors.push({
+        lineNumber,
+        recordType: this.recordType,
+        fieldName: 'orgaos_colegiados_validation',
+        fieldPosition: 173,
+        fieldValue: orgaosColegiados.join('|'),
+        ruleName: 'orgaos_colegiados_required',
+        errorMessage: 'Pelo menos um órgão colegiado deve ser informado',
+        severity: 'error',
+      });
+    }
+
+    // Regra 19: Campos 182-187 (Formas de educação ambiental)
+    const desenvolveEducacaoAmbiental = parts[180] || ''; // Campo 181
+    if (desenvolveEducacaoAmbiental === '1') {
+      const formasEducacaoAmbiental: string[] = [];
+      for (let i = 181; i < 187; i++) {
+        formasEducacaoAmbiental.push(parts[i] || '0');
+      }
+
+      if (!formasEducacaoAmbiental.some((valor) => valor === '1')) {
+        errors.push({
+          lineNumber,
+          recordType: this.recordType,
+          fieldName: 'formas_educacao_ambiental_validation',
+          fieldPosition: 181,
+          fieldValue: formasEducacaoAmbiental.join('|'),
+          ruleName: 'formas_educacao_ambiental_required',
+          errorMessage:
+            'Pelo menos uma forma de educação ambiental deve ser informada quando a escola desenvolve educação ambiental',
+          severity: 'error',
+        });
+      }
+    }
+
+    return errors;
+  }
 }
