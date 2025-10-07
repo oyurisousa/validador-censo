@@ -173,4 +173,73 @@ export class ValidationController {
 
     return resultDto as ValidationResultDto;
   }
+
+  @Post('validate-with-context')
+  @UseGuards(ValidationGuard, RateLimitGuard)
+  @UseInterceptors(ValidationLoggingInterceptor)
+  @ApiOperation({
+    summary: 'Validação com contexto cruzado',
+    description:
+      'Realiza validação considerando contexto entre registros (00, 30, 40)',
+  })
+  @ApiBody({
+    type: ValidationRequestDto,
+    description: 'Lista de registros para validação com contexto',
+    examples: {
+      example1: {
+        summary: 'Exemplo com registros 00, 30 e 40',
+        value: {
+          records: [
+            '00|12345678|1|01/02/2025|31/12/2025|||||||||||||||||2|||||||||||||||||||||||||||||||||||||',
+            '30|12345678|DIR001|123456789012|12345678901|JOÃO DA SILVA|15/05/1980|1|MARIA DA SILVA||1|1||1|76||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||',
+            '40|12345678|DIR001|123456789012|1|4|1',
+          ],
+          version: '2025',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Validação com contexto realizada com sucesso',
+    type: ValidationResultDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados de entrada inválidos',
+  })
+  async validateWithContext(
+    @Body() validationRequest: ValidationRequestDto,
+  ): Promise<ValidationResultDto> {
+    if (!validationRequest.records || validationRequest.records.length === 0) {
+      throw new BadRequestException('Lista de registros não pode estar vazia');
+    }
+
+    const version = validationRequest.version || '2025';
+
+    const result: ValidationResult =
+      await this.validationEngine.validateRecordsWithContext(
+        validationRequest.records,
+        'context-validation.txt',
+        version,
+      );
+
+    const resultDto = {
+      isValid: result.isValid,
+      totalRecords: result.totalRecords,
+      processedRecords: result.processedRecords,
+      processingTime: result.processingTime,
+      errors: result.errors,
+      warnings: result.warnings,
+      fileMetadata: {
+        fileName: result.fileMetadata.fileName,
+        fileSize: result.fileMetadata.fileSize,
+        totalLines: result.fileMetadata.totalLines,
+        encoding: result.fileMetadata.encoding,
+        uploadDate: result.fileMetadata.uploadDate.toISOString(),
+      },
+    };
+
+    return resultDto as ValidationResultDto;
+  }
 }

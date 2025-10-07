@@ -8,6 +8,8 @@ import { SchoolIdentificationRule } from './rules/record-rules/school-identifica
 import { SchoolCharacterizationRule } from './rules/record-rules/school-characterization.rule';
 import { ClassesRule } from './rules/record-rules/classes.rule';
 import { PhysicalPersonsRule } from './rules/record-rules/physical-persons.rule';
+import { SchoolManagerBondRule } from './rules/record-rules/school-manager-bond.rule';
+import { SchoolProfessionalBondRule } from './rules/record-rules/school-professional-bond.rule';
 import { FileEndRule } from './rules/record-rules/file-end.rule';
 
 @Module({
@@ -21,6 +23,8 @@ import { FileEndRule } from './rules/record-rules/file-end.rule';
     SchoolCharacterizationRule,
     ClassesRule,
     PhysicalPersonsRule,
+    SchoolManagerBondRule,
+    SchoolProfessionalBondRule,
     FileEndRule,
   ],
   exports: [
