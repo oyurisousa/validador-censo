@@ -184,4 +184,3 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     return true;
   }
 }
-

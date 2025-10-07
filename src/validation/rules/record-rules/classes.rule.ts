@@ -87,4 +87,3 @@ export class ClassesRule extends BaseRecordRule {
     },
   ];
 }
-
