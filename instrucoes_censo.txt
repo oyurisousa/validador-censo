@@ -1,0 +1,371 @@
+MINISTÉRIO DA EDUCAÇÃO
+INSTITUTO NACIONAL DE ESTUDOS E PESQUISAS EDUCACIONAIS ANÍSIO TEIXEIRA
+DIRETORIA DE ESTATÍSTICAS EDUCACIONAIS
+
+Etapas e Instruções Gerais para a Migração no
+Sistema Educacenso 2025 (Matrícula Inicial)
+Há duas formas de informar o Censo Escolar: utilizando os Formulários no sistema
+Educacenso e por meio da Migração com um arquivo de texto plano padronizado. A Migração é
+para aquelas escolas ou redes de ensino que possuem um software próprio de gestão escolar. Se
+bem projetado, o software pode gerar um arquivo de texto plano (.txt) de forma a reduzir o trabalho
+para cadastrar as informações no Educacenso (sistema online para coleta dos dados do Censo
+Escolar). O INEP disponibiliza um layout pré-estabelecido, uma grade onde cada posição indica de
+qual o campo se trata o dado. O arquivo enviado pela escola ou rede de ensino é validado durante
+o procedimento de Migração das informações do seu sistema para o banco de dados do INEP. Este
+documento (Etapas e Instruções da Migração do Educacenso) é um manual com as etapas que
+devem ser seguidas para que a Migração ocorra com sucesso.
+O INEP não dispõe de API para transferência de dados entre aplicações.
+1ª ETAPA – EXPORTAÇÃO DOS DADOS
+Os usuários do sistema Educacenso podem solicitar a exportação dos dados da(s) sua(s)
+escola(s) diretamente no sistema Educacenso. A exportação consiste em um arquivo de texto plano
+(.txt) com todos os dados do ano anterior informados no Educacenso. O arquivo de exportação vem
+de acordo com o Layout de Importação e Exportação do ano solicitado.
+Somente usuários do nível “Superusuário” no sistema do ano anterior, podem
+solicitar o arquivo de exportação.
+A primeira etapa para a realização da Migração é solicitar a exportação dos dados da(s)
+sua(s) escola(s) no Educacenso do ano anterior à coleta do ano corrente no endereço
+https://censobasico.inep.gov.br/censobasico_2024. O objetivo básico da exportação de dados do
+ano anterior é a obtenção do código de identificação única (ID) de alunos e profissionais
+escolares, para atualizar esse código no software próprio. Para realizar a atualização, o arquivo de
+exportação do ano anterior trará os alunos, profissionais e gestores escolares com seus vínculos e
+o seu respectivo código no software próprio (enviado ao INEP por ocasião da migração anterior) e
+código de identificação única. Tendo o código do sistema próprio e o código do INEP, a atualização
+do sistema próprio pode ser realizada. Para solicitar a exportação é necessário aceitar o termo de
+compromisso.
+A exportação de dados do ano corrente, antes do envio da coleta de dados do respectivo
+ano, fornecerá apenas os dados obrigatórios das escolas cadastradas (registro 00), de acordo com
+o layout atual, uma vez que ainda não há informações de vínculos disponíveis para o ano corrente.
+Ao final da coleta, quando publicados os resultados finais, a exportação de dados do ano em
+curso já poderá ser realizada pelo usuário para a atualização dos sistemas locais e preparação para
+a migração da 2ª etapa do Censo Escolar (coleta da situação do aluno).
+
+1
+
+1
+
+PERFIS DE USUÁRIO
+Usuários de perfil “Estado” têm privilégio para exportar todas as escolas estaduais
+localizadas no seu território e vinculadas ao respectivo estado. Usuários de perfil “Municipal” têm
+privilégio para exportar todas as escolas municipais localizadas no seu território e vinculadas ao
+respectivo município. Usuários do perfil “Escola” têm privilégio para exportar apenas os dados da
+sua própria escola. Usuários do perfil Setec e Regional não têm privilégio de exportação.
+Lembre-se que exportação é privilégio somente do Superusuário em qualquer dos perfis.
+SOLICITANDO A EXPORTAÇÃO
+Após a autenticação do usuário no sistema Educacenso, selecione no menu a opção 1ª
+Etapa > Migração > Exportação > Solicitar-Arquivo.
+Para perfil diferente de Escola, será apresentada a tela de pesquisa com os campos que
+servirão de filtros para exportar a escola ou o grupo de escolas desejadas. Após selecionar os filtros
+desejados clique no botão “Solicitar Arquivo”.
+O Termo de Compromisso será apresentado e, depois de marcar a caixa de verificação “De
+acordo”, clique no botão “Continuar”. Uma mensagem será apresentada informando que a
+exportação foi solicitada com sucesso. No menu 1ª Etapa > Migração > Exportação > Panorama é
+possível acompanhar a evolução da criação do arquivo que será processado em até 24 horas. Após
+conclusão do processamento, baixe o arquivo para seu computador.
+Lembre-se que este arquivo contém dados sigilosos e, em nenhuma hipótese, deverá
+ser disponibilizado a terceiros sem prévia autorização da Rede de Ensino a que pertence.
+O arquivo de exportação baixado estará compactado no formato .zip. Use um software
+descompactador como WinRAR ou 7-Zip para extrair o arquivo “txt que pode ser aberto em qualquer
+editor de texto plano (Bloco de notas, Notepad++, ou Sublime Text).
+2ª ETAPA – ATUALIZAÇÃO DOS DADOS NOS SISTEMAS PRÓPRIOS
+Com o arquivo de exportação baixado, atualize os códigos de identificação única dos alunos
+e profissionais escolares no seu sistema local próprio.
+É fundamental que todos os alunos e profissionais escolares que já possuam código de
+identificação única na base do Inep sejam encaminhados com esse código. Com isso, o
+desempenho da importação é otimizado, reduzindo a possibilidade de criação de cadastros duplos
+na base de dados do Educacenso, causando prejuízos tanto às escolas quanto às informações
+censitárias.
+3ª ETAPA – GERAÇÃO E ENVIO DE ARQUIVO DE IDENTIFICAÇÃO DE ALUNOS,
+PROFISSIONAIS E GESTORES ESCOLARES SEM ID
+Para os alunos e profissionais escolares que restarem sem código de identificação única
+– que provavelmente serão alunos e profissionais escolares novos ou vindos de outras redes de
+ensino, municípios e estados – e para os gestores escolares, que coletaremos pela primeira vez
+como cadastro de pessoa física, prepare um arquivo de identificação no formato “.txt” com as
+informações necessárias para a identificação desses alunos, profissionais e gestores escolares na
+base de dados do INEP.
+PREPARANDO O ARQUIVO DE IDENTIFICAÇÃO
+O arquivo de identificação deve estar de acordo com o Layout de Identificação que pode
+ser obtido no endereço https://www.gov.br/inep/pt-br/areas-de-atuacao/pesquisas-estatisticas-e-
+
+2
+
+2
+
+indicadores/censo-escolar/orientacoes/matricula-inicial/migracao. Os campos devem ser separados
+por Pipe (o caractere “|”). Os campos sem informação não devem ser preenchidos, fazendo com
+que haja dois Pipes seguidos (“||”, por exemplo). Empenhe-se em informar mesmo os dados
+opcionais, pois quanto mais são os dados, mais próximo à realidade podemos chegar, mas faça
+isso apenas se eles estiverem disponíveis.
+O tamanho do campo informado no layout diz respeito ao tamanho máximo do campo,
+apenas os campos com tamanho fixo devem ter seu tamanho obedecido, os demais não devem ser
+adicionados de espaço ou zero à esquerda para que o tamanho seja atingido. O arquivo de
+identificação deve possuir, no máximo, 20Mb. O nome do arquivo não pode ultrapassar 20
+caracteres, entre letras não acentuadas, números e underscore, não podendo conter espaços, com
+a extensão “txt” (“meu_arquivo.txt”, por exemplo).
+Segue um exemplo fictício de um arquivo de identificação.
+
+ENVIANDO O ARQUIVO DE IDENTIFICAÇÃO
+Selecione no menu a opção em 1ª Etapa > Migração > Identificação > Enviar arquivo. Clique
+em “Selecionar Arquivo”, escolha o arquivo txt previamente preparado, e clique em “Enviar Arquivo”.
+
+Se o arquivo não estiver de acordo com o layout pré-estabelecido, o sistema acusará os erros
+encontrados. Se não forem encontrados erros no arquivo de identificação, será apresentada uma
+mensagem informando que o arquivo foi enviado com sucesso. Acompanhe o processamento da
+solicitação em 1ª Etapa > Migração > Identificação > Panorama. Nesta tela, há alguns filtros para
+facilitar a busca pelo arquivo enviado. Após concluído o processo, baixe o arquivo para seu
+computador.
+
+3
+
+3
+
+4ª ETAPA – IDENTIFICAÇÃO DE ALUNOS NO INEP
+O arquivo baixado na etapa anterior vem compactado no formato .zip. Depois de
+descompactado, pode haver até três arquivos de texto no formato .txt que são:
+RESULTADO_CERTO, RESULTADO_PROVAVEIS e RESULTADO_SEMID.
+O arquivo RESULTADO_CERTO contém os alunos, profissionais e gestores escolares
+identificados. Esses códigos podem ser carregados diretamente na base local, copie e cole os
+
+códigos em seu software de gerenciamento escolar proprietário.
+O arquivo RESULTADO_PROVAVEIS é encaminhado para que o usuário, antes de carregálo em seu sistema, faça uma análise e identifique, dentre os listados, se algum deles corresponde
+ao aluno, profissional ou gestor escolar enviado. Nesses casos não foi possível para o INEP
+identificar com segurança o aluno, profissional ou gestor escolar enviado devido a diferenças entre
+os dados enviados e os dados que constam no banco de dados do INEP.
+Ressaltamos que é de inteira responsabilidade do usuário o uso desses códigos de
+identificação única (Inep). O fato de o Inep encaminhar a listagem com os resultados
+prováveis não significa que um dos códigos de identificação única listados seja da mesma
+pessoa que o usuário procura. Só use o código recebido quando houver certeza dos dados sob
+pena de descaracterização nos dados pessoais do aluno, profissional escolar, ou gestor.
+O arquivo RESULTADO_SEMID contém os alunos, profissionais e gestores escolares que
+não foram identificados nem como prováveis.
+Para os alunos que não forem identificados nesse processo de identificação, o usuário deve
+realizar uma pesquisa manual no sistema Educacenso. Se mesmo assim não achar o código de
+identificação único, este aluno, profissional ou gestor escolar pode ser enviado no arquivo de
+importação sem esse código como pessoa nova, e, para ele, será gerado, automaticamente, um
+novo código de identificação única no banco de dados do INEP.
+5ª ETAPA – GERAÇÃO DO ARQUIVO DE IMPORTAÇÃO
+Após a atualização dos códigos de identificação única de alunos, profissionais e gestores
+escolares no software de gerenciamento escolar próprio, deverá ser gerado um Arquivo de
+Importação no formato “.txt” de acordo com o Layout de Importação e Exportação da Matrícula
+Inicial. Esse documento pode ser encontrado no site oficial Gov.br no endereço
+https://www.gov.br/inep/pt-br/areas-de-atuacao/pesquisas-estatisticas-e-indicadores/censoescolar/orientacoes/matricula-inicial/migracao.
+Nesse endereço, também estão disponíveis outros documentos com informações
+necessárias para a Migração, inclusive as Tabelas Auxiliares utilizadas no Educacenso, as quais
+possuem dados categóricos a serem utilizados para a informação de dados em alguns campos do
+arquivo de importação.
+
+4
+
+4
+
+GERANDO O ARQUIVO DE IMPORTAÇÃO
+O arquivo gerado pode conter os dados de mais de uma escola. Os arquivos a serem
+importados são compostos pela sequência dos registros de Identificação da Escola (00),
+Caracterização e Infraestrutura da Escola (10), Turmas (20), Pessoas Físicas (30), Vínculos de
+Gestores Escolares (40), Vínculos de Profissionais Escolares (50), e Vínculos de Alunos (60)
+conforme especificação abaixo, além do registro 99 que deve ser usado para indicar o final do
+arquivo. Cada registro ocupará uma linha no arquivo de importação.
+É de inteira responsabilidade da rede de ensino ou escola a geração do arquivo de
+importação a partir de seu sistema de gerenciamento escolar. O INEP não tem gerência sobre
+qualquer que seja o software utilizado pela escola para gerenciamento de seus dados.
+Portanto, consulte o responsável técnico pelo sistema utilizado na escola ou rede de ensino sobre
+a possibilidade da geração do arquivo de importação conforme os critérios do INEP.
+
+Abaixo, um exemplo de como se parece um arquivo de importação:
+00|dados...| escola 1
+10|dados...| escola 1
+20|dados...| escola 1 – turma 1
+20|dados...| escola 1 – turma 2
+30|dados...| escola 1 – pessoa física 1
+30|dados...| escola 1 – pessoa física 2
+30|dados...| escola 1 – pessoa física 3
+30|dados...| escola 1 – pessoa física 4
+30|dados...| escola 1 – pessoa física 5
+40|dados...| escola 1 – vínculo de gestor escolar 1
+40|dados...| escola 1 – vínculo de gestor escolar 2
+50|dados...| escola 1 – vínculo de profissional escolar 1
+50|dados...| escola 1 – vínculo de profissional escolar 2
+60|dados...| escola 1 – vínculo de aluno 1
+60|dados...| escola 1 – vínculo de aluno 2
+60|dados...| escola 1 – vínculo de aluno 3
+60|dados...| escola 1 – vínculo de aluno 4
+00|dados...| escola 2
+10|dados...| escola 2
+20|dados...| escola 2 – turma 1
+20|dados...| escola 2 – turma 2
+20|dados...| escola 2 – turma 3
+30|dados...| escola 2 – pessoa física 1
+30|dados...| escola 2 – pessoa física 2
+30|dados...| escola 2 – pessoa física 3
+30|dados...| escola 2 – pessoa física 4
+30|dados...| escola 2 – pessoa física 5
+40|dados...| escola 2 – vínculo de gestor escolar 1
+50|dados...| escola 2 – vínculo de profissional escolar 1
+
+5
+
+5
+
+60|dados...| escola 2 – vínculo de aluno 1
+60|dados...| escola 2 – vínculo de aluno 2
+60|dados...| escola 2 – vínculo de aluno 3
+60|dados...| escola 2 – vínculo de aluno 4
+99| Fim do arquivo de importação
+
+6ª ETAPA – IMPORTAÇÃO DOS DADOS NO AMBIENTE DE PRODUÇÃO
+Você
+pode
+acessar
+ambiente
+de
+produção
+através
+do
+endereço
+https://censobasico.inep.gov.br/censobasico/#/. Os dados enviados ao Educacenso através da
+Migração sobrepõem todos os dados da escola que foram informados previamente. Assim, se o
+usuário responder o Censo Escolar através dos formulários do Educacenso e, posteriormente,
+submeter o arquivo de importação no Educacenso, os dados anteriormente informados serão
+sobrepostos pelas informações importadas, não havendo como desfazer a ação de Migração.
+Quando a migração for realizada pela rede estadual ou municipal, é possível bloquear as
+escolas para que os usuários não tenham acesso aos formulários de cadastro do Educacenso,
+reduzindo o risco de sobreposição de dados. Clique na opção do menu 1ª Etapa > Escola >
+Bloquear, use os filtros para selecionar a escola ou escolas que serão bloqueadas, informe o motivo
+do bloqueio (ele será apresentado ao usuário da escola), e por fim clique em “Enviar”.
+
+A última informação realizada no Educacenso, seja por Migração ou via Formulário do
+Educacenso, será a oficial. Mesmo após a importação via Migração, caso a escola esteja
+desbloqueada, será possível alterar a informação via Formulário. Além disso, são permitidas outras
+submissões de arquivos de importação, mas lembre-se que a cada nova importação, o dado oficial
+será o último, esse processo não permite a restauração para um estado anterior.
+NÍVEIS E PERFIS DE USUÁRIO
+“Importação” é o termo utilizado para a ação de submeter um “arquivo de importação”,
+conforme layout previamente estabelecido pelo INEP, no Educacenso, ou seja, enviar os dados ao
+INEP. Somente usuários de nível Superusuário e Executor têm privilégio para realizar Importação
+de Dados no processo de Migração.
+Usuários do perfil “Estado” têm privilégio para importar todas as escolas, de todos os
+municípios e redes (federal, estadual, municipal e privada) localizadas no seu território e vinculadas
+ao respectivo estado. Usuários do perfil “Regional” têm privilégio para importar todas as escolas, de
+todos os municípios e redes (federal, estadual, municipal e privada) localizadas no seu território e
+vinculadas à respectiva regional de ensino. Usuários do perfil “Municipal” têm privilégio para
+importar todas as escolas da rede municipal e privada localizadas em seu território e vinculadas à
+secretaria municipal de educação. Usuários do perfil “Escola” têm privilégio para importar apenas
+os dados da sua própria escola. Usuários do perfil “SETEC” têm privilégio para importar apenas os
+dados das escolas federais ligadas à SETEC.
+
+6
+
+6
+
+IMPORTANDO ARQUIVOS
+O arquivo de importação deve ser enviado na opção de menu 1ª Etapa > Migração >
+Importação, depois clique no botão “Selecionar Arquivo”. Encontre o diretório onde o arquivo txt foi
+armazenado e clique sobre ele, depois use o botão “Enviar Arquivo”, daí será apresentada uma
+mensagem informando que o arquivo foi importado com sucesso. Mas, muito calma! Não se trata
+ainda da conclusão do processamento do arquivo. Você apenas enviou os dados, eles ainda serão
+processados pelo INEP.
+
+7ª ETAPA – ACOMPANHAMENTO DA IMPORTAÇÃO
+Você deverá acompanhar a evolução do status do arquivo em 1ª Etapa > Migração >
+Panorama, onde há uma tela com filtros para facilitar a busca pelo arquivo enviado. O status do
+arquivo pode se: “Aguardando validação”; “Em validação”; “Aguardando processamento”;
+“Aguardando fechamento”; “Recusado”; “Importado parcialmente”; “Importado”.
+
+O arquivo passa por algumas etapas antes que os dados sejam gravados no banco do Inep.
+O processamento do arquivo obedecerá a ordem em que foi enviado. O status pode assumir a
+seguinte descrição:
+“Aguardando validação”: ainda está na fila para iniciar seu processamento, dependendo do
+fluxo de arquivos, além da quantidade de dados em cada um, isso pode demorar algumas horas.
+“Em validação”: o Educacenso está verificando a integridade dos dados contidos no arquivo.
+Neste momento, verifica-se se todos os registros foram informados, se para cada registro há a
+quantidade de campos correta, se os dados foram informados de acordo com o Layout de
+Importação. Neste momento, a verificação se atém ao arquivo.
+
+7
+
+7
+
+“Aguardando processamento”: se chegou nesse ponto, seu arquivo foi escrito
+satisfatoriamente. Agora ele está na fila para verificação das informações.
+“Aguardando fechamento”: neste ponto, o Educacenso está fazendo a comparação das
+informações com o que consta na base de dados do Inep. Nesta fase, é que se verifica se os dados
+pessoais de alunos, profissionais escolares e gestores estão de acordo com a base da Receita
+Federal. Portanto, passar pela validação não garante a importação dos dados.
+“Recusado”: esse status é apresentado nas duas situações quando o arquivo não passa pela
+validação e quando não passa pelo processamento.
+“Importado parcialmente”: esse status é apresentado ao final, quando os dados foram
+importados, mas há algumas ressalvas quanto a algumas informações. Por exemplo, pode ser que
+haja um aluno já vinculado em outra escola em mesmo horário, portanto esse aluno não pode ser
+vinculado conforme o arquivo, ou seja, existem pendências que faz com que uma determinada
+informação não possa ser gravada no banco de dados do Inpe. Assim, o usuário migrador deverá
+completar as informações diretamente nos formulários do Educacenso.
+“Importado”: quando não há qualquer pendência em relação ao que o usuário informou no
+arquivo, esse status será apresentado. Fique tranquilo, a maior parte dos arquivos serão importados
+parcialmente.
+Mesmo quando o arquivo obtém status de “Importado”, é dever do gestor conferir todas
+as informações importadas. Pode ser que o arquivo tenha sido gerado com ausência de algum
+dado. O status “Importado” ou “Importado parcialmente” não estão dizendo que os dados
+importados estão em conformidade com a realidade da escola e sim que os dados importados estão
+em conformidade com o arquivo enviado.
+Para auxiliar no processo de Migração, o Educacenso disponibiliza arquivos de avisos e de
+erros. Esses arquivos contêm os registros e linhas onde se encontram as inconsistências que
+invalidaram a importação dos dados. Além disso, o usuário deve conferir a lista de dados que não
+foram importados, nos casos de importação parcial. Todos os documentos emitidos pelo
+Educacenso são oficiais e sigilosos, portanto, devem ser mantidos na escola (ou entidade
+responsável por sua guarda).
+O arquivo de importação deve ser enviado por completo. Desse modo, não é possível
+enviar algumas turmas deixando outras para enviar mais tarde. Nesse exemplo, as primeiras turmas
+seriam apagadas do sistema por causa do segundo envio de arquivo, isto é, o Educacenso conterá
+um retrato da última importação realizada.
+8ª ETAPA – FECHAMENTO DO CENSO ESCOLAR
+Realizada a importação da escola, as informações prestadas poderão ser verificadas no
+menu “Relatórios”. Se não houver mais nada a ser corrigido, é hora de realizar o fechamento da
+escola. Clique no menu “Fechamento”, siga os passos indicados e solicite o fechamento da escola.
+Por fim, gere e guarde o recibo de fechamento em um local seguro. As escolas não fechadas na
+Matrícula Inicial não serão consideradas no Censo Escolar da Educação Básica.
+Após a publicação dos dados preliminares será necessário realizar a verificação dos dados
+que foram declarados mediante migração e, em casos de identificação de erros, a correção deverá
+ser feita exclusivamente no período de retificação, pois não será possível realizar quaisquer
+retificações após a publicação dos dados finais no Diário Oficial da União.
+Para esclarecimentos adicionais, entre em contato com a equipe de migração do Censo
+Escolar.
+
+8
+
+8
+
+CONTATOS
+TÉCNICO DO CENSO ESCOLAR
+
+TELEFONE
+
+E-MAIL
+
+Glauco Rocha
+
+(61) 2022-3193
+
+glauco.rocha@inep.gov.br
+
+Henrique Santos
+
+(61) 2022-3194
+
+henrique.santos@inep.gov.br
+
+Júlio Marques
+
+(61) 2022-3159
+
+julio.marques@inep.gov.br
+
+Marcos Serra
+
+(61) 2022-3159
+
+marcos.serra@inep.gov.br
+
+9
+
+9
+
+
