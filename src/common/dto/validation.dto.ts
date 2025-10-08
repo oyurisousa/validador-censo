@@ -27,11 +27,20 @@ export class ValidationErrorDto {
   recordType: string;
 
   @ApiProperty({
-    description: 'Nome do campo que contém o erro',
+    description:
+      'Nome técnico do campo que contém o erro (identificador único)',
     example: 'co_entidade',
   })
   @IsString()
   fieldName: string;
+
+  @ApiPropertyOptional({
+    description: 'Descrição amigável do campo para exibição ao usuário',
+    example: 'Código INEP da Escola',
+  })
+  @IsString()
+  @IsOptional()
+  fieldDescription?: string;
 
   @ApiPropertyOptional({
     description: 'Posição/número do campo (0-based)',
@@ -123,6 +132,7 @@ export class ValidationResultDto {
         lineNumber: 1,
         recordType: 'SCHOOL_IDENTIFICATION',
         fieldName: 'co_entidade',
+        fieldDescription: 'Código INEP da Escola',
         fieldPosition: 2,
         fieldValue: '12345678',
         ruleName: 'required_field',

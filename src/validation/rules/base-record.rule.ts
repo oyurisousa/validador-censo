@@ -105,6 +105,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldDescription: field.description,
         fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'required_field',
@@ -125,6 +126,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldDescription: field.description,
         fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'min_length',
@@ -139,6 +141,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldDescription: field.description,
         fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'max_length',
@@ -153,6 +156,7 @@ export abstract class BaseRecordRule {
         lineNumber,
         recordType: this.recordType,
         fieldName: field.name,
+        fieldDescription: field.description,
         fieldPosition: field.position,
         fieldValue: value,
         ruleName: 'pattern_validation',
@@ -185,6 +189,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldDescription: field.description,
             fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'numeric_validation',
@@ -204,6 +209,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldDescription: field.description,
             fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'date_validation',
@@ -230,6 +236,7 @@ export abstract class BaseRecordRule {
             lineNumber,
             recordType: this.recordType,
             fieldName: field.name,
+            fieldDescription: field.description,
             fieldPosition: field.position,
             fieldValue: value,
             ruleName: 'date_validation',
@@ -325,5 +332,55 @@ export abstract class BaseRecordRule {
   ): ValidationError[] {
     // Implementação padrão vazia - classes filhas podem sobrescrever
     return [];
+  }
+
+  /**
+   * Helper para criar erro de validação com descrição do campo
+   */
+  protected createFieldError(
+    field: FieldRule,
+    lineNumber: number,
+    fieldValue: string,
+    ruleName: string,
+    errorMessage: string,
+    severity: ValidationSeverity = ValidationSeverity.ERROR,
+  ): ValidationError {
+    return {
+      lineNumber,
+      recordType: this.recordType,
+      fieldName: field.name,
+      fieldDescription: field.description,
+      fieldPosition: field.position,
+      fieldValue,
+      ruleName,
+      errorMessage,
+      severity,
+    };
+  }
+
+  /**
+   * Helper para criar erro genérico de validação
+   */
+  protected createError(
+    lineNumber: number,
+    fieldName: string,
+    fieldDescription: string | undefined,
+    fieldPosition: number,
+    fieldValue: string,
+    ruleName: string,
+    errorMessage: string,
+    severity: ValidationSeverity = ValidationSeverity.ERROR,
+  ): ValidationError {
+    return {
+      lineNumber,
+      recordType: this.recordType,
+      fieldName,
+      fieldDescription,
+      fieldPosition,
+      fieldValue,
+      ruleName,
+      errorMessage,
+      severity,
+    };
   }
 }

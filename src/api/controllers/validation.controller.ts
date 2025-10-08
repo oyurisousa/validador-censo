@@ -106,7 +106,6 @@ export class ValidationController {
   }
 
   @Post('upload')
-  @UseGuards(FileUploadGuard)
   @UseInterceptors(FileInterceptor('file'), ValidationLoggingInterceptor)
   @ApiOperation({
     summary: 'Upload e validação de arquivo',
@@ -128,6 +127,7 @@ export class ValidationController {
           example: '2025',
         },
       },
+      required: ['file'],
     },
   })
   @ApiResponse({
@@ -147,15 +147,40 @@ export class ValidationController {
     @UploadedFile() file: Express.Multer.File,
     @Body('version') version?: string,
   ): Promise<ValidationResultDto> {
+    // Validação 1: Arquivo obrigatório
     if (!file) {
       throw new BadRequestException('Arquivo é obrigatório');
     }
 
+    // Validação 2: Tipo de arquivo
     if (!file.originalname.endsWith('.txt')) {
       throw new BadRequestException('Apenas arquivos .txt são permitidos');
     }
 
+    // Validação 3: Tamanho do arquivo (20MB)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      throw new BadRequestException(
+        `Arquivo muito grande. Tamanho máximo permitido: 20MB. Tamanho atual: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      );
+    }
+
+    // Validação 4: Nome do arquivo
+    const fileName = file.originalname.replace('.txt', '');
+    const allowedPattern = /^[a-zA-Z0-9_\-\.]+$/;
+    if (fileName.length > 100) {
+      throw new BadRequestException(
+        'Nome do arquivo muito longo. Máximo: 100 caracteres',
+      );
+    }
+
+    // Validar conteúdo do arquivo
     const content = file.buffer.toString('utf-8');
+
+    if (!content || content.trim().length === 0) {
+      throw new BadRequestException('Arquivo está vazio');
+    }
+
     const result = await this.validationEngine.validateFile(
       content,
       file.originalname,
