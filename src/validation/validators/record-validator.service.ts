@@ -119,7 +119,7 @@ export class RecordValidatorService {
       case RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS:
         return this.validateSchoolProfessionalLinks(parts, lineNumber);
 
-      case RecordTypeEnum.STUDENT_LINKS:
+      case RecordTypeEnum.STUDENT_ENROLLMENT:
         return this.validateStudentLinks(parts, lineNumber);
 
       case RecordTypeEnum.FILE_END:
@@ -311,7 +311,7 @@ export class RecordValidatorService {
     if (parts.length < 10) {
       errors.push({
         lineNumber,
-        recordType: RecordTypeEnum.STUDENT_LINKS,
+        recordType: RecordTypeEnum.STUDENT_ENROLLMENT,
         fieldName: 'field_count',
         fieldValue: parts.length.toString(),
         ruleName: 'minimum_fields',

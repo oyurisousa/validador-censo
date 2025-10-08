@@ -13,6 +13,7 @@ import { RecordValidatorService } from '../validators/record-validator.service';
 import { FileValidatorService } from '../validators/file-validator.service';
 import { SchoolManagerBondRule } from '../rules/record-rules/school-manager-bond.rule';
 import { SchoolProfessionalBondRule } from '../rules/record-rules/school-professional-bond.rule';
+import { StudentEnrollmentRule } from '../rules/record-rules/student-enrollment.rule';
 
 // Interface para contexto de escola (registro 00)
 interface SchoolContext {
@@ -48,6 +49,7 @@ export class ValidationEngineService {
     private readonly fileValidator: FileValidatorService,
     private readonly schoolManagerBondRule: SchoolManagerBondRule,
     private readonly schoolProfessionalBondRule: SchoolProfessionalBondRule,
+    private readonly studentEnrollmentRule: StudentEnrollmentRule,
   ) {}
 
   async validateFile(
@@ -422,6 +424,72 @@ export class ValidationEngineService {
           if (contextErrors.length === 0 && personContext) {
             professionalBonds.add(codigoPessoa);
           }
+        } else if (recordType === RecordTypeEnum.STUDENT_ENROLLMENT) {
+          // Validação especial para registro 60 com contexto
+          const codigoPessoa = parts[2] || '';
+          const codigoTurma = parts[4] || '';
+          const personContext = personContexts.get(codigoPessoa);
+          const classContext = classContexts.get(codigoTurma);
+
+          // Sempre criar o contexto da escola (independente de ter pessoa/turma)
+          const studentSchoolContext = schoolContext
+            ? {
+                schoolCode: schoolContext.codigoInep || '',
+                administrativeDependency:
+                  schoolContext.dependenciaAdministrativa
+                    ? parseInt(schoolContext.dependenciaAdministrativa)
+                    : undefined,
+                classes: Array.from(classContexts.values()).map((c) => ({
+                  classCode: c.codigoTurma,
+                  teachingMediation: c.mediacao,
+                  isRegular: c.curricular,
+                  isComplementaryActivity: c.atividadeComplementar,
+                  stage: c.etapa,
+                  specializedEducationalService: false, // TODO: implementar quando campo estiver disponível
+                  differentiatedLocation: 0, // TODO: implementar quando campo estiver disponível
+                })),
+                persons: Array.from(personContexts.values()).map((p) => ({
+                  personCode: p.codigoPessoa,
+                  inepId: p.identificacaoInep,
+                  residenceCountry: 76, // TODO: implementar quando campo estiver disponível
+                })),
+              }
+            : undefined;
+
+          const studentPersonContext = personContext
+            ? {
+                personCode: personContext.codigoPessoa,
+                inepId: personContext.identificacaoInep,
+                residenceCountry: 76, // TODO: implementar quando campo estiver disponível
+              }
+            : undefined;
+
+          const studentClassContext = classContext
+            ? {
+                classCode: classContext.codigoTurma,
+                teachingMediation: classContext.mediacao,
+                isRegular: classContext.curricular,
+                isComplementaryActivity: classContext.atividadeComplementar,
+                stage: classContext.etapa,
+                specializedEducationalService: false, // TODO: implementar quando campo estiver disponível
+                differentiatedLocation: 0, // TODO: implementar quando campo estiver disponível
+              }
+            : undefined;
+
+          const contextErrors = this.studentEnrollmentRule.validateWithContext(
+            parts,
+            studentSchoolContext,
+            studentClassContext,
+            studentPersonContext,
+            lineNumber,
+          );
+
+          errors.push(...contextErrors);
+
+          // Adiciona pessoa aos vínculos de alunos se não houve erro
+          if (contextErrors.length === 0 && personContext) {
+            // Aqui poderia adicionar lógica para rastrear matrículas de alunos se necessário
+          }
         } else {
           // Validação normal para outros tipos
           const recordErrors = await this.recordValidator.validateRecord(
@@ -494,7 +562,7 @@ export class ValidationEngineService {
       case '50':
         return RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS;
       case '60':
-        return RecordTypeEnum.STUDENT_LINKS;
+        return RecordTypeEnum.STUDENT_ENROLLMENT;
       case '99':
         return RecordTypeEnum.FILE_END;
       default:

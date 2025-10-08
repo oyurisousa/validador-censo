@@ -80,7 +80,7 @@ export class TxtFileParserService {
       case '50':
         return RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS;
       case '60':
-        return RecordTypeEnum.STUDENT_LINKS;
+        return RecordTypeEnum.STUDENT_ENROLLMENT;
       case '99':
         return RecordTypeEnum.FILE_END;
       default:

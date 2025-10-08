@@ -5,6 +5,7 @@ import { ClassesRule } from './record-rules/classes.rule';
 import { PhysicalPersonsRule } from './record-rules/physical-persons.rule';
 import { SchoolManagerBondRule } from './record-rules/school-manager-bond.rule';
 import { SchoolProfessionalBondRule } from './record-rules/school-professional-bond.rule';
+import { StudentEnrollmentRule } from './record-rules/student-enrollment.rule';
 import { FileEndRule } from './record-rules/file-end.rule';
 import { BaseRecordRule } from './base-record.rule';
 import { RecordTypeEnum } from 'src/common/enums/record-types.enum';
@@ -21,6 +22,7 @@ export class RecordRulesManagerService {
     private readonly physicalPersonsRule: PhysicalPersonsRule,
     private readonly schoolManagerBondRule: SchoolManagerBondRule,
     private readonly schoolProfessionalBondRule: SchoolProfessionalBondRule,
+    private readonly studentEnrollmentRule: StudentEnrollmentRule,
     private readonly fileEndRule: FileEndRule,
   ) {
     this.initializeRules();
@@ -46,11 +48,12 @@ export class RecordRulesManagerService {
       RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS,
       this.schoolProfessionalBondRule,
     );
+    this.rules.set(
+      RecordTypeEnum.STUDENT_ENROLLMENT,
+      this.studentEnrollmentRule,
+    );
 
     this.rules.set(RecordTypeEnum.FILE_END, this.fileEndRule);
-
-    // TODO: Adicionar outras regras conforme implementadas
-    // this.rules.set(RecordTypeEnum.STUDENT_LINKS, this.studentLinksRule);
   }
 
   /**

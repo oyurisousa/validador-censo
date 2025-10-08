@@ -5,7 +5,7 @@ export enum RecordTypeEnum {
   PHYSICAL_PERSONS = '30',
   SCHOOL_MANAGER_LINKS = '40',
   SCHOOL_PROFESSIONAL_LINKS = '50',
-  STUDENT_LINKS = '60',
+  STUDENT_ENROLLMENT = '60',
   FILE_END = '99',
 }
 
@@ -16,7 +16,7 @@ export enum RecordTypeName {
   PHYSICAL_PERSONS = 'Pessoas Físicas',
   SCHOOL_MANAGER_LINKS = 'Vínculos de Gestores Escolares',
   SCHOOL_PROFESSIONAL_LINKS = 'Vínculos de Profissionais Escolares',
-  STUDENT_LINKS = 'Vínculos de Alunos',
+  STUDENT_ENROLLMENT = 'Vínculos de Alunos',
   FILE_END = 'Final do Arquivo',
 }
 
