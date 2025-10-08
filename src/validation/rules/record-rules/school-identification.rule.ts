@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
@@ -758,17 +761,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
         (!telefone || telefone.trim() === '') &&
         (!outroTelefone || outroTelefone.trim() === '')
       ) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'telefones_validation',
-          fieldPosition: 14, // Referencia o primeiro campo de telefone
-          fieldValue: `${telefone}|${outroTelefone}`,
-          ruleName: 'telefones_required_with_ddd',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'telefones_validation',
+            'Telefones da escola',
+            14,
+            `${telefone}|${outroTelefone}`,
+            'telefones_required_with_ddd',
             'Pelo menos um telefone deve ser informado quando o DDD for preenchido',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -788,17 +792,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       ].some((valor) => valor === '1');
 
       if (!temVinculo) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'orgao_vinculacao_validation',
-          fieldPosition: 21, // Referencia o primeiro campo do grupo
-          fieldValue: `${vinculoSecEducacao}|${vinculoSecSeguranca}|${vinculoSecSaude}|${vinculoOutroOrgao}`,
-          ruleName: 'orgao_vinculacao_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'orgao_vinculacao_validation',
+            'Órgão de vinculação da escola pública',
+            21,
+            `${vinculoSecEducacao}|${vinculoSecSeguranca}|${vinculoSecSaude}|${vinculoOutroOrgao}`,
+            'orgao_vinculacao_required',
             'Pelo menos um órgão de vinculação deve ser informado para escola pública',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -822,17 +827,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       ].some((valor) => valor === '1');
 
       if (!temMantenedora) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'mantenedora_validation',
-          fieldPosition: 25, // Referencia o primeiro campo do grupo
-          fieldValue: `${mantenedoraEmpresa}|${mantenedoraSindicatos}|${mantenedoraOng}|${mantenedoraInstituicao}|${mantenedoraSistemaS}|${mantenedoraOscip}`,
-          ruleName: 'mantenedora_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'mantenedora_validation',
+            'Mantenedora da escola privada',
+            25,
+            `${mantenedoraEmpresa}|${mantenedoraSindicatos}|${mantenedoraOng}|${mantenedoraInstituicao}|${mantenedoraSistemaS}|${mantenedoraOscip}`,
+            'mantenedora_required',
             'Pelo menos uma mantenedora deve ser informada para escola privada em atividade',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -856,17 +862,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       ].some((valor) => valor === '1');
 
       if (!temContratoEstadual) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'contrato_estadual_validation',
-          fieldPosition: 35, // Referencia o primeiro campo do grupo
-          fieldValue: `${termoColaboracaoEst}|${termoFomentoEst}|${acordoCooperacaoEst}|${contratoPrestacaoEst}|${cooperacaoTecnicaEst}|${consorcioEst}`,
-          ruleName: 'contrato_estadual_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'contrato_estadual_validation',
+            'Forma de contratação da parceria estadual',
+            35,
+            `${termoColaboracaoEst}|${termoFomentoEst}|${acordoCooperacaoEst}|${contratoPrestacaoEst}|${cooperacaoTecnicaEst}|${consorcioEst}`,
+            'contrato_estadual_required',
             'Pelo menos uma forma de contratação deve ser informada para parceria estadual',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -890,17 +897,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       ].some((valor) => valor === '1');
 
       if (!temContratoMunicipal) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'contrato_municipal_validation',
-          fieldPosition: 41, // Referencia o primeiro campo do grupo
-          fieldValue: `${termoColaboracaoMun}|${termoFomentoMun}|${acordoCooperacaoMun}|${contratoPrestacaoMun}|${cooperacaoTecnicaMun}|${consorcioMun}`,
-          ruleName: 'contrato_municipal_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'contrato_municipal_validation',
+            'Forma de contratação da parceria municipal',
+            41,
+            `${termoColaboracaoMun}|${termoFomentoMun}|${acordoCooperacaoMun}|${contratoPrestacaoMun}|${cooperacaoTecnicaMun}|${consorcioMun}`,
+            'contrato_municipal_required',
             'Pelo menos uma forma de contratação deve ser informada para parceria municipal',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -916,17 +924,18 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       );
 
       if (!temEsfera) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'esfera_administrativa_validation',
-          fieldPosition: 50, // Referencia o primeiro campo do grupo
-          fieldValue: `${esferaFederal}|${esferaEstadual}|${esferaMunicipal}`,
-          ruleName: 'esfera_administrativa_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'esfera_administrativa_validation',
+            'Esfera administrativa do conselho',
+            50,
+            `${esferaFederal}|${esferaEstadual}|${esferaMunicipal}`,
+            'esfera_administrativa_required',
             'Pelo menos uma esfera administrativa deve ser informada quando há regulamentação/autorização',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 

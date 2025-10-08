@@ -317,17 +317,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
 
     // Field 5 (inep_class_code) should not be filled
     if (parts[5] && parts[5].trim() !== '') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'inep_class_code',
-        fieldPosition: 5,
-        fieldValue: parts[5],
-        ruleName: 'should_not_be_filled',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'inep_class_code',
+          'Código da turma no Inep',
+          5,
+          parts[5],
+          'should_not_be_filled',
           'O campo foi preenchido quando deveria não ser preenchido.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Validate knowledge areas for duplicates
@@ -336,32 +337,35 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       .filter((area) => area && area.trim() !== '');
     const uniqueAreas = new Set(knowledgeAreas);
     if (knowledgeAreas.length !== uniqueAreas.size) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'knowledge_areas',
-        fieldPosition: 8,
-        fieldValue: knowledgeAreas.join(', '),
-        ruleName: 'duplicate_areas',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'knowledge_areas',
+          'Áreas do conhecimento/componentes curriculares',
+          8,
+          knowledgeAreas.join(', '),
+          'duplicate_areas',
           '"Áreas do conhecimento/componentes curriculares que leciona" não foram preenchidas corretamente. Não podem ser informadas duas Áreas do conhecimento/componentes curriculares iguais.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Validate each knowledge area code
     knowledgeAreas.forEach((area, index) => {
       if (area && !KNOWLEDGE_AREAS[area]) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: `knowledge_area_${index + 1}`,
-          fieldPosition: 8 + index,
-          fieldValue: area,
-          ruleName: 'invalid_knowledge_area',
-          errorMessage: 'O campo foi preenchido com valor não permitido.',
-          severity: ValidationSeverity.ERROR,
-        });
+        errors.push(
+          this.createError(
+            lineNumber,
+            `knowledge_area_${index + 1}`,
+            `Área do conhecimento/componente curricular ${index + 1}`,
+            8 + index,
+            area,
+            'invalid_knowledge_area',
+            'O campo foi preenchido com valor não permitido.',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     });
 
@@ -374,17 +378,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       filledFormativeAreas.length > 0 &&
       filledFormativeAreas.every((area) => area === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'formative_itinerary_areas',
-        fieldPosition: 33,
-        fieldValue: filledFormativeAreas.join(', '),
-        ruleName: 'all_formative_areas_no',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'formative_itinerary_areas',
+          'Áreas do itinerário formativo',
+          33,
+          filledFormativeAreas.join(', '),
+          'all_formative_areas_no',
           '"Área(s) do itinerário formativo" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não).',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -399,17 +404,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     const errors: ValidationError[] = [];
 
     if (schoolCode !== schoolContext.schoolCode) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'school_code',
-        fieldPosition: 1,
-        fieldValue: schoolCode,
-        ruleName: 'school_code_mismatch',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'school_code',
+          'Código de escola - Inep',
+          1,
+          schoolCode,
+          'school_code_mismatch',
           'O campo "Código de escola - Inep" está diferente do registro 00 antecedente.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -427,16 +433,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       (p) => p.personCode === personCode,
     );
     if (!personExists) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'person_code',
-        fieldPosition: 2,
-        fieldValue: personCode,
-        ruleName: 'person_not_found',
-        errorMessage: 'Não há pessoa física com esse código nesta escola.',
-        severity: ValidationSeverity.ERROR,
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'person_code',
+          'Código da pessoa física no sistema próprio',
+          2,
+          personCode,
+          'person_not_found',
+          'Não há pessoa física com esse código nesta escola.',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -450,17 +458,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     const errors: ValidationError[] = [];
 
     if (inepId && inepId.trim() !== '' && inepId !== personContext.inepId) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'inep_id',
-        fieldPosition: 3,
-        fieldValue: inepId,
-        ruleName: 'inep_id_mismatch',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'inep_id',
+          'Identificação única/INEP',
+          3,
+          inepId,
+          'inep_id_mismatch',
           'O campo está diferente da "Identificação Única (Inep)" do registro 30 correspondente.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -477,16 +486,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       (c) => c.classCode === classCode,
     );
     if (!classExists) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'class_code',
-        fieldPosition: 4,
-        fieldValue: classCode,
-        ruleName: 'class_not_found',
-        errorMessage: 'Não há turma com esse código nesta escola.',
-        severity: ValidationSeverity.ERROR,
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'class_code',
+          'Código da turma no sistema próprio',
+          4,
+          classCode,
+          'class_not_found',
+          'Não há turma com esse código nesta escola.',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -511,78 +522,83 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     // Rule 3: Functions 1,2,3,4,7,8 only for presential or semi-presential
     if (['1', '2', '3', '4', '7', '8'].includes(functionCode)) {
       if (teachingMediation !== 1 && teachingMediation !== 2) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'function',
-          fieldPosition: 6,
-          fieldValue: functionCode,
-          ruleName: 'invalid_function_for_mediation',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'function',
+            'Função',
+            6,
+            functionCode,
+            'invalid_function_for_mediation',
             'O campo não pode ser preenchido com 1 (Docente), 2 (Auxiliar/Assistente educacional), 3 (Profissional/Monitor de atividade complementar), 4 (Tradutor-Intérprete de LIBRAS), 7 (Guia-Intérprete de Libras) ou 8 (Profissional de apoio escolar para aluno(a)s com deficiência) quando o tipo de mediação didático-pedagógica da turma não for presencial ou semipresencial.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
     // Rule 4: Function 2 only for regular classes
     if (functionCode === '2' && !isRegular) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'function',
-        fieldPosition: 6,
-        fieldValue: functionCode,
-        ruleName: 'invalid_function_for_class_type',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'function',
+          'Função',
+          6,
+          functionCode,
+          'invalid_function_for_class_type',
           'O campo não pode ser preenchido com 2 (Auxiliar/Assistente educacional) quando o tipo da turma não for Curricular (etapa de ensino).',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Rule 5: Function 3 only for complementary activity classes
     if (functionCode === '3' && !isComplementaryActivity) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'function',
-        fieldPosition: 6,
-        fieldValue: functionCode,
-        ruleName: 'invalid_function_for_activity_type',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'function',
+          'Função',
+          6,
+          functionCode,
+          'invalid_function_for_activity_type',
           'O campo não pode ser preenchido com 3 (Profissional/Monitor de atividade complementar) quando o tipo de atendimento da turma não for de atividade complementar.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Rule 6: Function 5 only for distance learning
     if (functionCode === '5' && teachingMediation !== 3) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'function',
-        fieldPosition: 6,
-        fieldValue: functionCode,
-        ruleName: 'invalid_function_for_ead',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'function',
+          'Função',
+          6,
+          functionCode,
+          'invalid_function_for_ead',
           'O campo não pode ser preenchido com 5 (Docente titular - coordenador de tutoria - EAD) quando o tipo de mediação didático-pedagógica da turma não for preenchido com 3 (Educação a distância).',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Rule 7: Function 6 only for distance learning
     if (functionCode === '6' && teachingMediation !== 3) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'function',
-        fieldPosition: 6,
-        fieldValue: functionCode,
-        ruleName: 'invalid_tutor_function',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'function',
+          'Função',
+          6,
+          functionCode,
+          'invalid_tutor_function',
           'O campo não pode ser preenchido com 6 (Docente tutor) quando o tipo de mediação didático-pedagógica da turma não for preenchido com 3 (Educação a distância).',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Rule 8: Function 9 only for professional education
@@ -591,17 +607,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
         !hasProfessionalItinerary ||
         ![39, 40, 73, 74, 64, 67, 68].includes(stage || 0)
       ) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'function',
-          fieldPosition: 6,
-          fieldValue: functionCode,
-          ruleName: 'invalid_instructor_function',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'function',
+            'Função',
+            6,
+            functionCode,
+            'invalid_instructor_function',
             'O campo não pode ser preenchido com 9 (Instrutor da Educação Profissional) quando a organização curricular da turma não for "Itinerário de formação técnica e profissional" e a etapa da turma não for 39, 40, 73, 74, 64, 67 e 68.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -623,51 +640,54 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
 
     if (isTeacherFunction && isPublicSchool) {
       if (!functionalStatus || functionalStatus.trim() === '') {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'functional_status',
-          fieldPosition: 7,
-          fieldValue: functionalStatus,
-          ruleName: 'functional_status_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'functional_status',
+            'Situação funcional/Regime de contratação/Tipo de vínculo',
+            7,
+            functionalStatus,
+            'functional_status_required',
             'O campo não foi preenchido quando deveria ser preenchido.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     } else if (
       !isTeacherFunction &&
       functionalStatus &&
       functionalStatus.trim() !== ''
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'functional_status',
-        fieldPosition: 7,
-        fieldValue: functionalStatus,
-        ruleName: 'functional_status_not_allowed',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'functional_status',
+          'Situação funcional/Regime de contratação/Tipo de vínculo',
+          7,
+          functionalStatus,
+          'functional_status_not_allowed',
           'O campo foi preenchido quando deveria não ser preenchido.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     } else if (
       isTeacherFunction &&
       !isPublicSchool &&
       functionalStatus &&
       functionalStatus.trim() !== ''
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'functional_status',
-        fieldPosition: 7,
-        fieldValue: functionalStatus,
-        ruleName: 'functional_status_private_school',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'functional_status',
+          'Situação funcional/Regime de contratação/Tipo de vínculo',
+          7,
+          functionalStatus,
+          'functional_status_private_school',
           'O campo foi preenchido quando deveria não ser preenchido.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -689,49 +709,52 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       if (area && area.trim() !== '') {
         // Rule: Only for teacher functions
         if (!isTeacherFunction) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: `knowledge_area_${index + 1}`,
-            fieldPosition: 8 + index,
-            fieldValue: area,
-            ruleName: 'knowledge_area_not_allowed',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              `knowledge_area_${index + 1}`,
+              `Área do conhecimento/componente curricular ${index + 1}`,
+              8 + index,
+              area,
+              'knowledge_area_not_allowed',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: ValidationSeverity.ERROR,
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
           return;
         }
 
         // Rule: Not for stages 1, 2, 3 (early childhood)
         if (!stage || [1, 2, 3].includes(stage)) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: `knowledge_area_${index + 1}`,
-            fieldPosition: 8 + index,
-            fieldValue: area,
-            ruleName: 'knowledge_area_invalid_stage',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              `knowledge_area_${index + 1}`,
+              `Área do conhecimento/componente curricular ${index + 1}`,
+              8 + index,
+              area,
+              'knowledge_area_invalid_stage',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: ValidationSeverity.ERROR,
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
           return;
         }
 
         // Rule: Must be offered by the class
         if (classContext.subjectAreas && !classContext.subjectAreas[area]) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: `knowledge_area_${index + 1}`,
-            fieldPosition: 8 + index,
-            fieldValue: area,
-            ruleName: 'knowledge_area_not_offered',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              `knowledge_area_${index + 1}`,
+              `Área do conhecimento/componente curricular ${index + 1}`,
+              8 + index,
+              area,
+              'knowledge_area_not_offered',
               'O campo não pode ser preenchido com uma área do conhecimento/componente curricular que não foi informada na turma ou foi informada sem docente.',
-            severity: ValidationSeverity.ERROR,
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       }
     });
@@ -742,17 +765,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       const hasItineraryAreas = hasFormativeItinerary;
 
       if ((!firstArea || firstArea.trim() === '') && !hasItineraryAreas) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'knowledge_area_1',
-          fieldPosition: 8,
-          fieldValue: firstArea || '',
-          ruleName: 'first_knowledge_area_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'knowledge_area_1',
+            'Área do conhecimento/componente curricular 1',
+            8,
+            firstArea || '',
+            'first_knowledge_area_required',
             'O campo não foi preenchido quando deveria ser preenchido.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -781,46 +805,49 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       if (area && area.trim() !== '') {
         // Must be teacher function
         if (!isTeacherFunction) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: fieldNames[index],
-            fieldPosition: 33 + index,
-            fieldValue: area,
-            ruleName: 'formative_area_not_allowed',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              fieldNames[index],
+              'Área do itinerário formativo',
+              33 + index,
+              area,
+              'formative_area_not_allowed',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: ValidationSeverity.ERROR,
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
 
         // Must have formative itinerary
         if (!hasFormativeItinerary) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: fieldNames[index],
-            fieldPosition: 33 + index,
-            fieldValue: area,
-            ruleName: 'formative_area_no_itinerary',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              fieldNames[index],
+              'Área do itinerário formativo',
+              33 + index,
+              area,
+              'formative_area_no_itinerary',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: ValidationSeverity.ERROR,
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       } else if (isTeacherFunction && hasFormativeItinerary) {
         // Must be filled when conditions are met
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: fieldNames[index],
-          fieldPosition: 33 + index,
-          fieldValue: area || '',
-          ruleName: 'formative_area_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            fieldNames[index],
+            'Área do itinerário formativo',
+            33 + index,
+            area || '',
+            'formative_area_required',
             'O campo não foi preenchido quando deveria ser preenchido.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     });
 
@@ -841,46 +868,49 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     if (professionalItinerary && professionalItinerary.trim() !== '') {
       // Must be valid function
       if (!isValidFunction) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'professional_itinerary',
-          fieldPosition: 37,
-          fieldValue: professionalItinerary,
-          ruleName: 'professional_itinerary_not_allowed',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'professional_itinerary',
+            'Itinerário de formação técnica e profissional',
+            37,
+            professionalItinerary,
+            'professional_itinerary_not_allowed',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Must have professional itinerary
       if (!hasProfessionalItinerary) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'professional_itinerary',
-          fieldPosition: 37,
-          fieldValue: professionalItinerary,
-          ruleName: 'professional_itinerary_no_class_support',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'professional_itinerary',
+            'Itinerário de formação técnica e profissional',
+            37,
+            professionalItinerary,
+            'professional_itinerary_no_class_support',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     } else if (isValidFunction && hasProfessionalItinerary) {
       // Must be filled when conditions are met
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'professional_itinerary',
-        fieldPosition: 37,
-        fieldValue: professionalItinerary || '',
-        ruleName: 'professional_itinerary_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'professional_itinerary',
+          'Itinerário de formação técnica e profissional',
+          37,
+          professionalItinerary || '',
+          'professional_itinerary_required',
           'O campo não foi preenchido quando deveria ser preenchido.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -895,17 +925,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     const errors: ValidationError[] = [];
 
     if (personContext.enrolledClasses?.includes(classCode)) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'class_code',
-        fieldPosition: 4,
-        fieldValue: classCode,
-        ruleName: 'student_teacher_conflict',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'class_code',
+          'Código da turma no sistema próprio',
+          4,
+          classCode,
+          'student_teacher_conflict',
           'O profissional escolar em sala de aula não pode ser vinculado a uma turma na qual ele é aluno.',
-        severity: ValidationSeverity.ERROR,
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;
@@ -928,17 +959,18 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
       );
 
       if (!hasStudentWithHearingIssues) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'function',
-          fieldPosition: 6,
-          fieldValue: functionCode,
-          ruleName: 'libras_no_student_need',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'function',
+            'Função',
+            6,
+            functionCode,
+            'libras_no_student_need',
             'O campo não pode ser preenchido com 4 (Tradutor-Intérprete de Libras) quando não há aluno(a) ou profissional escolar em sala de aula com surdez, surdocegueira ou deficiência auditiva vinculado à turma.',
-          severity: ValidationSeverity.ERROR,
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 

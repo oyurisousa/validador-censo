@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
@@ -2194,16 +2197,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     ];
 
     if (!locaisFuncionamento.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'local_funcionamento_validation',
-        fieldPosition: 2,
-        fieldValue: locaisFuncionamento.join('|'),
-        ruleName: 'local_funcionamento_required',
-        errorMessage: 'Pelo menos um local de funcionamento deve ser informado',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'local_funcionamento_validation',
+          'Local de funcionamento da escola',
+          2,
+          locaisFuncionamento.join('|'),
+          'local_funcionamento_required',
+          'Pelo menos um local de funcionamento deve ser informado',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 2: Campos 11-16 (Código da escola com a qual compartilha)
@@ -2219,17 +2224,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
 
     const codigosUnicos = new Set(codigosEscolaCompartilha);
     if (codigosEscolaCompartilha.length > codigosUnicos.size) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'codigos_escola_compartilha_validation',
-        fieldPosition: 10,
-        fieldValue: codigosEscolaCompartilha.join('|'),
-        ruleName: 'codigos_escola_compartilha_duplicated',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigos_escola_compartilha_validation',
+          'Códigos de escola com a qual compartilha',
+          10,
+          codigosEscolaCompartilha.join('|'),
+          'codigos_escola_compartilha_duplicated',
           'Não pode haver códigos de escola compartilhada duplicados',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 3: Campos 18-23 (Abastecimento de água)
@@ -2244,17 +2250,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     ];
 
     if (!abastecimentoAgua.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'abastecimento_agua_validation',
-        fieldPosition: 17,
-        fieldValue: abastecimentoAgua.join('|'),
-        ruleName: 'abastecimento_agua_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'abastecimento_agua_validation',
+          'Abastecimento de água',
+          17,
+          abastecimentoAgua.join('|'),
+          'abastecimento_agua_required',
           'Pelo menos uma opção de abastecimento de água deve ser informada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 4: Campos 24-27 (Fonte de energia elétrica)
@@ -2267,17 +2274,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     ];
 
     if (!fonteEnergia.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'fonte_energia_validation',
-        fieldPosition: 23,
-        fieldValue: fonteEnergia.join('|'),
-        ruleName: 'fonte_energia_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'fonte_energia_validation',
+          'Fonte de energia elétrica',
+          23,
+          fonteEnergia.join('|'),
+          'fonte_energia_required',
           'Pelo menos uma fonte de energia elétrica deve ser informada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 5: Campos 28-31 (Esgotamento sanitário)
@@ -2290,17 +2298,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     ];
 
     if (!esgotamento.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'esgotamento_sanitario_validation',
-        fieldPosition: 27,
-        fieldValue: esgotamento.join('|'),
-        ruleName: 'esgotamento_sanitario_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'esgotamento_sanitario_validation',
+          'Esgotamento sanitário',
+          27,
+          esgotamento.join('|'),
+          'esgotamento_sanitario_required',
           'Pelo menos uma opção de esgotamento sanitário deve ser informada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 6: Campos 32-36 (Destinação do lixo)
@@ -2314,17 +2323,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     ];
 
     if (!destinacaoLixo.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'destinacao_lixo_validation',
-        fieldPosition: 31,
-        fieldValue: destinacaoLixo.join('|'),
-        ruleName: 'destinacao_lixo_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'destinacao_lixo_validation',
+          'Destinação do lixo',
+          31,
+          destinacaoLixo.join('|'),
+          'destinacao_lixo_required',
           'Pelo menos uma opção de destinação do lixo deve ser informada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 7: Campos 37-40 (Tratamento do lixo/resíduos)
@@ -2342,17 +2352,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       camposPreenchidos.length > 0 &&
       camposPreenchidos.every((valor) => valor === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'tratamento_lixo_validation',
-        fieldPosition: 36,
-        fieldValue: tratamentoLixo.join('|'),
-        ruleName: 'tratamento_lixo_all_no',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'tratamento_lixo_validation',
+          'Tratamento do lixo/resíduos',
+          36,
+          tratamentoLixo.join('|'),
+          'tratamento_lixo_all_no',
           'Não podem todos os campos de tratamento de lixo serem preenchidos com 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 8: Campos 41-79 (Dependências físicas existentes)
@@ -2363,16 +2374,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     if (!dependenciasFisicas.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'dependencias_fisicas_validation',
-        fieldPosition: 40,
-        fieldValue: dependenciasFisicas.slice(0, 5).join('|') + '...',
-        ruleName: 'dependencias_fisicas_required',
-        errorMessage: 'Pelo menos uma dependência física deve ser informada',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'dependencias_fisicas_validation',
+          'Dependências físicas existentes na escola',
+          40,
+          dependenciasFisicas.slice(0, 5).join('|') + '...',
+          'dependencias_fisicas_required',
+          'Pelo menos uma dependência física deve ser informada',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 9: Campos 80-89 (Recursos de acessibilidade)
@@ -2383,17 +2396,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     if (!recursosAcessibilidade.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'recursos_acessibilidade_validation',
-        fieldPosition: 79,
-        fieldValue: recursosAcessibilidade.join('|'),
-        ruleName: 'recursos_acessibilidade_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'recursos_acessibilidade_validation',
+          'Recursos de acessibilidade',
+          79,
+          recursosAcessibilidade.join('|'),
+          'recursos_acessibilidade_required',
           'Pelo menos um recurso de acessibilidade deve ser informado',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 10: Campos 95-101 (Equipamentos técnicos e administrativos)
@@ -2410,17 +2424,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       equipamentosPreenchidos.length > 0 &&
       equipamentosPreenchidos.every((valor) => valor === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'equipamentos_tecnicos_validation',
-        fieldPosition: 94,
-        fieldValue: equipamentosTecnicos.join('|'),
-        ruleName: 'equipamentos_tecnicos_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'equipamentos_tecnicos_validation',
+          'Equipamentos técnicos e administrativos',
+          94,
+          equipamentosTecnicos.join('|'),
+          'equipamentos_tecnicos_required',
           'Não podem todos os campos de equipamentos técnicos serem preenchidos com 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 11: Campos 110-114 (Acesso à internet)
@@ -2431,17 +2446,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     if (!acessoInternet.some((valor) => valor === '1')) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'acesso_internet_validation',
-        fieldPosition: 109,
-        fieldValue: acessoInternet.join('|'),
-        ruleName: 'acesso_internet_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'acesso_internet_validation',
+          'Acesso à internet',
+          109,
+          acessoInternet.join('|'),
+          'acesso_internet_required',
           'Pelo menos uma opção de acesso à internet deve ser informada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 12: Campos 118-120 (Rede local de computadores)
@@ -2453,17 +2469,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       redePreenchida.length > 0 &&
       redePreenchida.every((valor) => valor === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'rede_local_validation',
-        fieldPosition: 117,
-        fieldValue: redeLocal.join('|'),
-        ruleName: 'rede_local_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'rede_local_validation',
+          'Rede local de computadores',
+          117,
+          redeLocal.join('|'),
+          'rede_local_required',
           'Não podem todos os campos de rede local serem preenchidos com 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 13: Campos 121-139 (Total de profissionais)
@@ -2476,31 +2493,35 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     }
 
     if (totalProfissionais.length === 0) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'total_profissionais_validation',
-        fieldPosition: 120,
-        fieldValue: '',
-        ruleName: 'total_profissionais_required',
-        errorMessage: 'Pelo menos um total de profissionais deve ser informado',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'total_profissionais_validation',
+          'Total de profissionais',
+          120,
+          '',
+          'total_profissionais_required',
+          'Pelo menos um total de profissionais deve ser informado',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 14: Campo 139 (Não há funcionários) - validação especial
     const naoHaFuncionarios = parts[138] || '';
     if (naoHaFuncionarios && naoHaFuncionarios !== '1') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'nao_ha_funcionarios_validation',
-        fieldPosition: 138,
-        fieldValue: naoHaFuncionarios,
-        ruleName: 'nao_ha_funcionarios_invalid_value',
-        errorMessage: 'Campo "Não há funcionários" só aceita o valor 1 (Sim)',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'nao_ha_funcionarios_validation',
+          'Não há funcionários',
+          138,
+          naoHaFuncionarios,
+          'nao_ha_funcionarios_invalid_value',
+          'Campo "Não há funcionários" só aceita o valor 1 (Sim)',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 15: Campos 141-157 (Materiais socioculturais/pedagógicos)
@@ -2517,17 +2538,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       materiaisPreenchidos.length > 0 &&
       materiaisPreenchidos.every((valor) => valor === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'materiais_pedagogicos_validation',
-        fieldPosition: 140,
-        fieldValue: materiaisPedagogicos.slice(0, 5).join('|') + '...',
-        ruleName: 'materiais_pedagogicos_all_no',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'materiais_pedagogicos_validation',
+          'Materiais socioculturais/pedagógicos',
+          140,
+          materiaisPedagogicos.slice(0, 5).join('|') + '...',
+          'materiais_pedagogicos_all_no',
           'Não podem todos os campos de materiais pedagógicos serem preenchidos com 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 16: Campos 159-160 (Língua de ensino)
@@ -2535,16 +2557,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
     const linguaPortuguesa = parts[159] || ''; // Campo 160
 
     if (linguaIndigena === '0' && linguaPortuguesa === '0') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'lingua_ensino_validation',
-        fieldPosition: 158,
-        fieldValue: `${linguaIndigena}|${linguaPortuguesa}`,
-        ruleName: 'lingua_ensino_required',
-        errorMessage: 'Pelo menos uma língua de ensino deve ser informada',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'lingua_ensino_validation',
+          'Língua de ensino',
+          158,
+          `${linguaIndigena}|${linguaPortuguesa}`,
+          'lingua_ensino_required',
+          'Pelo menos uma língua de ensino deve ser informada',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 17: Campos 165-170 (Reserva de vagas por cotas)
@@ -2556,17 +2580,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       }
 
       if (!reservaVagas.some((valor) => valor === '1')) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'reserva_vagas_validation',
-          fieldPosition: 164,
-          fieldValue: reservaVagas.join('|'),
-          ruleName: 'reserva_vagas_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'reserva_vagas_validation',
+            'Reserva de vagas por cotas',
+            164,
+            reservaVagas.join('|'),
+            'reserva_vagas_required',
             'Pelo menos uma opção de reserva de vagas deve ser informada quando há exame de seleção',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -2582,17 +2607,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       orgaosPreenchidos.length > 0 &&
       orgaosPreenchidos.every((valor) => valor === '0')
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'orgaos_colegiados_validation',
-        fieldPosition: 173,
-        fieldValue: orgaosColegiados.join('|'),
-        ruleName: 'orgaos_colegiados_all_no',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'orgaos_colegiados_validation',
+          'Órgãos colegiados em funcionamento',
+          173,
+          orgaosColegiados.join('|'),
+          'orgaos_colegiados_all_no',
           'Não podem todos os campos de órgãos colegiados serem preenchidos com 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 19: Campos 182-187 (Formas de educação ambiental)
@@ -2604,17 +2630,18 @@ export class SchoolCharacterizationRule extends BaseRecordRule {
       }
 
       if (!formasEducacaoAmbiental.some((valor) => valor === '1')) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'formas_educacao_ambiental_validation',
-          fieldPosition: 181,
-          fieldValue: formasEducacaoAmbiental.join('|'),
-          ruleName: 'formas_educacao_ambiental_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'formas_educacao_ambiental_validation',
+            'Formas de educação ambiental',
+            181,
+            formasEducacaoAmbiental.join('|'),
+            'formas_educacao_ambiental_required',
             'Pelo menos uma forma de educação ambiental deve ser informada quando a escola desenvolve educação ambiental',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 

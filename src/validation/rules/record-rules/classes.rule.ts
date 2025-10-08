@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
 @Injectable()
@@ -865,17 +868,18 @@ export class ClassesRule extends BaseRecordRule {
       });
 
       if (!hasSchedule) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'horarios_validation',
-          fieldPosition: 6, // Campo 6 que causa a regra
-          fieldValue: tipoMediacao,
-          ruleName: 'schedule_required_for_presencial',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'horarios_validation',
+            'Horários de funcionamento',
+            6, // Campo 6 que causa a regra
+            tipoMediacao,
+            'schedule_required_for_presencial',
             'Para tipo de mediação presencial, pelo menos um horário de funcionamento deve ser preenchido',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -886,17 +890,18 @@ export class ClassesRule extends BaseRecordRule {
     );
 
     if (!hasValidType) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'tipo_turma_validation',
-        fieldPosition: 14,
-        fieldValue: `${parts[13]}|${parts[14]}|${parts[15]}`,
-        ruleName: 'type_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'tipo_turma_validation',
+          'Tipo de turma',
+          14,
+          `${parts[13]}|${parts[14]}|${parts[15]}`,
+          'type_required',
           '"Tipo de turma" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 3: Se Atividade complementar = 1, pelo menos um dos campos 17-22 deve ser preenchido
@@ -910,17 +915,18 @@ export class ClassesRule extends BaseRecordRule {
       });
 
       if (!hasActivity) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'atividade_complementar_validation',
-          fieldPosition: 15,
-          fieldValue: atividadeComplementar,
-          ruleName: 'activity_type_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'atividade_complementar_validation',
+            'Atividade complementar',
+            15,
+            atividadeComplementar,
+            'activity_type_required',
             'O campo "Atividade complementar" foi preenchido com 1 (Sim), porém a turma não informou o tipo de atividade complementar',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Regra 4: Não pode haver dois códigos de atividade iguais
@@ -931,17 +937,18 @@ export class ClassesRule extends BaseRecordRule {
       const uniqueActivities = new Set(filledActivities);
 
       if (filledActivities.length !== uniqueActivities.size) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'atividade_duplicada_validation',
-          fieldPosition: 17,
-          fieldValue: filledActivities.join('|'),
-          ruleName: 'activity_duplicate',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'atividade_duplicada_validation',
+            'Tipo de atividade complementar',
+            17,
+            filledActivities.join('|'),
+            'activity_duplicate',
             '"Tipo de atividade complementar" não foi preenchido corretamente. Não pode haver dois códigos do tipo de atividade iguais',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -958,19 +965,18 @@ export class ClassesRule extends BaseRecordRule {
       organizationFilled.every((value) => value === '0');
 
     if (allOrganizationZero) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'organizacao_turma_validation',
-        fieldPosition: 28,
-        fieldValue: organizationPositions
-          .map((pos) => parts[pos] || '')
-          .join('|'),
-        ruleName: 'organization_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'organizacao_turma_validation',
+          'Formas de organização da turma',
+          28,
+          organizationPositions.map((pos) => parts[pos] || '').join('|'),
+          'organization_required',
           '"Formas de organização da turma" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 6: Não podem 2 ou mais dos campos de 28 a 32 serem preenchidos com 1 (Sim)
@@ -979,19 +985,18 @@ export class ClassesRule extends BaseRecordRule {
     );
 
     if (organizationOnes.length >= 2) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'organizacao_exclusiva_validation',
-        fieldPosition: 28,
-        fieldValue: organizationPositions
-          .map((pos) => parts[pos] || '')
-          .join('|'),
-        ruleName: 'organization_exclusive',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'organizacao_exclusiva_validation',
+          'Formas de organização da turma',
+          28,
+          organizationPositions.map((pos) => parts[pos] || '').join('|'),
+          'organization_exclusive',
           '"Formas de organização da turma" não foi preenchido corretamente',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 7: Não podem todos os campos de 34 a 36 serem preenchidos com 0 (Não)
@@ -1003,19 +1008,18 @@ export class ClassesRule extends BaseRecordRule {
       curricularFilled.every((value) => value === '0');
 
     if (allCurricularZero) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'organizacao_curricular_validation',
-        fieldPosition: 34,
-        fieldValue: curricularPositions
-          .map((pos) => parts[pos] || '')
-          .join('|'),
-        ruleName: 'curricular_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'organizacao_curricular_validation',
+          'Organização curricular da turma',
+          34,
+          curricularPositions.map((pos) => parts[pos] || '').join('|'),
+          'curricular_required',
           '"Organização curricular da turma" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 8: Se itinerário de aprofundamento = 1, não podem todos os campos 37-40 serem 0
@@ -1029,19 +1033,18 @@ export class ClassesRule extends BaseRecordRule {
         itineraryFilled.every((value) => value === '0');
 
       if (allItineraryZero) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'itinerario_areas_validation',
-          fieldPosition: 37,
-          fieldValue: itineraryPositions
-            .map((pos) => parts[pos] || '')
-            .join('|'),
-          ruleName: 'itinerary_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'itinerario_areas_validation',
+            'Área(s) do itinerário formativo',
+            37,
+            itineraryPositions.map((pos) => parts[pos] || '').join('|'),
+            'itinerary_required',
             '"Área(s) do itinerário formativo" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -1058,17 +1061,18 @@ export class ClassesRule extends BaseRecordRule {
       componentsFilled.every((value) => value === '0');
 
     if (allComponentsZero) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'componentes_curriculares_validation',
-        fieldPosition: 43,
-        fieldValue: 'all_zero',
-        ruleName: 'components_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'componentes_curriculares_validation',
+          'Áreas do conhecimento/componentes curriculares',
+          43,
+          'all_zero',
+          'components_required',
           '"Áreas do conhecimento/componentes curriculares" não foram preenchidas corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     return errors;

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
 // Interface para dados do registro 00 necessários para validação do registro 40
@@ -211,16 +214,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
 
     // Deve ser igual ao valor informado no campo 2 do registro 00
     if (codigoInep !== schoolContext.codigoInep) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'codigo_inep',
-        fieldPosition: 1,
-        fieldValue: codigoInep,
-        ruleName: 'school_code_mismatch',
-        errorMessage: 'Código INEP deve ser igual ao informado no registro 00',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_inep',
+          'Código INEP da escola',
+          1,
+          codigoInep,
+          'school_code_mismatch',
+          'Código INEP deve ser igual ao informado no registro 00',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -234,17 +239,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
 
     // Deve existir no registro 30
     if (codigoPessoa !== personContext.codigoPessoa) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'codigo_pessoa_sistema',
-        fieldPosition: 2,
-        fieldValue: codigoPessoa,
-        ruleName: 'person_not_found',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'person_not_found',
           'Não há pessoa física com esse código registrada no registro 30',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -262,17 +268,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
       personContext.identificacaoInep &&
       identificacaoInep !== personContext.identificacaoInep
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'identificacao_inep',
-        fieldPosition: 3,
-        fieldValue: identificacaoInep,
-        ruleName: 'identification_mismatch',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'identificacao_inep',
+          'Identificação única/INEP',
+          3,
+          identificacaoInep,
+          'identification_mismatch',
           'Identificação única deve ser igual à informada no registro 30',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -286,17 +293,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
 
     // Verifica se a pessoa já tem vínculo como gestor
     if (existingBonds.includes(codigoPessoa)) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'codigo_pessoa_sistema',
-        fieldPosition: 2,
-        fieldValue: codigoPessoa,
-        ruleName: 'duplicate_manager_bond',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'duplicate_manager_bond',
           'Pessoa física já possui vínculo como gestor escolar nesta escola',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -311,31 +319,33 @@ export class SchoolManagerBondRule extends BaseRecordRule {
     // Validação básica sem contexto - apenas obrigatoriedade para diretores
     // As validações específicas de dependência administrativa serão feitas no método com contexto
     if (cargo === '1' && !criterioAcesso) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'access_criteria_required_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'access_criteria_required_director',
           'Campo "Critério de acesso ao cargo" deve ser preenchido quando cargo = 1 (Diretor)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (cargo !== '1' && criterioAcesso) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'access_criteria_not_allowed_non_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'access_criteria_not_allowed_non_director',
           'Campo "Critério de acesso ao cargo" não pode ser preenchido quando cargo não for 1 (Diretor)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -351,47 +361,50 @@ export class SchoolManagerBondRule extends BaseRecordRule {
 
     // Regra 1: Obrigatório quando cargo = 1 (Diretor) e situação = 1 (Ativa)
     if (cargo === '1' && situacaoFuncionamento === '1' && !criterioAcesso) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'access_criteria_required_director_active',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'access_criteria_required_director_active',
           'Campo "Critério de acesso ao cargo" deve ser preenchido quando cargo = 1 (Diretor) e escola em atividade',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 2: Não pode ser preenchido quando cargo != 1
     if (cargo !== '1' && criterioAcesso) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'access_criteria_not_allowed_non_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'access_criteria_not_allowed_non_director',
           'Campo "Critério de acesso ao cargo" não pode ser preenchido quando cargo não for 1 (Diretor)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 3: Não pode ser preenchido quando situação != 1 (Ativa)
     if (situacaoFuncionamento !== '1' && criterioAcesso) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'access_criteria_not_allowed_inactive',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'access_criteria_not_allowed_inactive',
           'Campo "Critério de acesso ao cargo" não pode ser preenchido quando escola não estiver em atividade',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 4: Valor 1 (Proprietário) só para escolas privadas
@@ -399,17 +412,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
       criterioAcesso === '1' &&
       ['1', '2', '3'].includes(dependenciaAdministrativa)
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'owner_criteria_public_school',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'owner_criteria_public_school',
           'Critério "Ser proprietário" (1) não pode ser usado em escola pública (Federal, Estadual ou Municipal)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 5: Valores 4, 5, 6 não podem ser usados em escolas privadas
@@ -417,17 +431,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
       ['4', '5', '6'].includes(criterioAcesso) &&
       dependenciaAdministrativa === '4'
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'criterio_acesso_cargo',
-        fieldPosition: 5,
-        fieldValue: criterioAcesso,
-        ruleName: 'public_criteria_private_school',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'criterio_acesso_cargo',
+          'Critério de acesso ao cargo',
+          5,
+          criterioAcesso,
+          'public_criteria_private_school',
           'Critérios 4, 5, 6 (Concurso público, Processo eleitoral) não podem ser usados em escola privada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -441,17 +456,18 @@ export class SchoolManagerBondRule extends BaseRecordRule {
 
     // Validação básica sem contexto - apenas para cargos não diretores
     if (cargo !== '1' && situacaoFuncional) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'situacao_funcional',
-        fieldPosition: 6,
-        fieldValue: situacaoFuncional,
-        ruleName: 'functional_status_not_allowed_non_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'situacao_funcional',
+          'Situação funcional',
+          6,
+          situacaoFuncional,
+          'functional_status_not_allowed_non_director',
           'Campo "Situação Funcional" não pode ser preenchido quando cargo não for 1 (Diretor)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -472,62 +488,66 @@ export class SchoolManagerBondRule extends BaseRecordRule {
       ['1', '2', '3'].includes(dependenciaAdministrativa) &&
       !situacaoFuncional
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'situacao_funcional',
-        fieldPosition: 6,
-        fieldValue: situacaoFuncional,
-        ruleName: 'functional_status_required_public_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'situacao_funcional',
+          'Situação funcional',
+          6,
+          situacaoFuncional,
+          'functional_status_required_public_director',
           'Campo "Situação Funcional" deve ser preenchido para Diretor em escola pública ativa',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 2: Não pode ser preenchido quando cargo != 1
     if (cargo !== '1' && situacaoFuncional) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'situacao_funcional',
-        fieldPosition: 6,
-        fieldValue: situacaoFuncional,
-        ruleName: 'functional_status_not_allowed_non_director',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'situacao_funcional',
+          'Situação funcional',
+          6,
+          situacaoFuncional,
+          'functional_status_not_allowed_non_director',
           'Campo "Situação Funcional" não pode ser preenchido quando cargo não for 1 (Diretor)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 3: Não pode ser preenchido quando situação != 1
     if (situacaoFuncionamento !== '1' && situacaoFuncional) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'situacao_funcional',
-        fieldPosition: 6,
-        fieldValue: situacaoFuncional,
-        ruleName: 'functional_status_not_allowed_inactive',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'situacao_funcional',
+          'Situação funcional',
+          6,
+          situacaoFuncional,
+          'functional_status_not_allowed_inactive',
           'Campo "Situação Funcional" não pode ser preenchido quando escola não estiver em atividade',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Regra 4: Não pode ser preenchido para escolas privadas
     if (dependenciaAdministrativa === '4' && situacaoFuncional) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'situacao_funcional',
-        fieldPosition: 6,
-        fieldValue: situacaoFuncional,
-        ruleName: 'functional_status_not_allowed_private',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'situacao_funcional',
+          'Situação funcional',
+          6,
+          situacaoFuncional,
+          'functional_status_not_allowed_private',
           'Campo "Situação Funcional" não pode ser preenchido para escola privada',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 

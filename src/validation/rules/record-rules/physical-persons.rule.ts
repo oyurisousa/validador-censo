@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
 @Injectable()
@@ -666,16 +669,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     // Validação específica para CPF
     if (field.name === 'cpf' && value && value.length === 11) {
       if (!this.isValidCPF(value)) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: field.name,
-          fieldPosition: field.position,
-          fieldValue: value,
-          ruleName: 'cpf_validation',
-          errorMessage: 'CPF inválido',
-          severity: 'error',
-        });
+        errors.push(
+          this.createError(
+            lineNumber,
+            field.name,
+            field.description || 'CPF',
+            field.position,
+            value,
+            'cpf_validation',
+            'CPF inválido',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -769,45 +774,50 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // Quando filiação for 1, pelo menos uma das filiações deve ser preenchida
     if (filiacao === '1' && !filiacao1 && !filiacao2) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'filiacao_validation',
-        fieldPosition: 8,
-        fieldValue: `filiacao:${filiacao}|filiacao1:${filiacao1}|filiacao2:${filiacao2}`,
-        ruleName: 'filiation_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'filiacao_validation',
+          'Filiação',
+          8,
+          `filiacao:${filiacao}|filiacao1:${filiacao1}|filiacao2:${filiacao2}`,
+          'filiation_required',
           'Campo "Filiação 1" ou "Filiação 2" deve ser preenchido quando Filiação = 1',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Filiações não podem ser preenchidas quando filiação = 0
     if (filiacao === '0' && (filiacao1 || filiacao2)) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'filiacao_validation',
-        fieldPosition: 8,
-        fieldValue: `filiacao:${filiacao}|filiacao1:${filiacao1}|filiacao2:${filiacao2}`,
-        ruleName: 'filiation_not_allowed',
-        errorMessage: 'Filiações não podem ser preenchidas quando Filiação = 0',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'filiacao_validation',
+          'Filiação',
+          8,
+          `filiacao:${filiacao}|filiacao1:${filiacao1}|filiacao2:${filiacao2}`,
+          'filiation_not_allowed',
+          'Filiações não podem ser preenchidas quando Filiação = 0',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Filiação 2 não pode ser igual à Filiação 1
     if (filiacao1 && filiacao2 && filiacao1 === filiacao2) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'filiacao_2',
-        fieldPosition: 9,
-        fieldValue: filiacao2,
-        ruleName: 'filiation_duplicate',
-        errorMessage: 'Filiação 2 não pode ser igual à Filiação 1',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'filiacao_2',
+          'Nome de filiação 2',
+          9,
+          filiacao2,
+          'filiation_duplicate',
+          'Filiação 2 não pode ser igual à Filiação 1',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -823,17 +833,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     if (!cpf && nomeCompleto) {
       const palavras = nomeCompleto.trim().split(/\s+/);
       if (palavras.length < 2) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'nome_completo',
-          fieldPosition: 5,
-          fieldValue: nomeCompleto,
-          ruleName: 'name_multiple_words',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'nome_completo',
+            'Nome completo',
+            5,
+            nomeCompleto,
+            'name_multiple_words',
             'Nome deve ter mais de uma palavra quando CPF não for preenchido',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // As duas primeiras palavras não podem ter apenas um caractere cada
@@ -842,17 +853,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
         palavras[0].length === 1 &&
         palavras[1].length === 1
       ) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'nome_completo',
-          fieldPosition: 5,
-          fieldValue: nomeCompleto,
-          ruleName: 'name_short_words',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'nome_completo',
+            'Nome completo',
+            5,
+            nomeCompleto,
+            'name_short_words',
             'As duas primeiras palavras do nome não podem ter apenas um caractere cada',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Não pode ter 4 ou mais caracteres iguais sequenciais
@@ -863,17 +875,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
           char === nomeCompleto[i + 2] &&
           char === nomeCompleto[i + 3]
         ) {
-          errors.push({
-            lineNumber,
-            recordType: this.recordType,
-            fieldName: 'nome_completo',
-            fieldPosition: 5,
-            fieldValue: nomeCompleto,
-            ruleName: 'name_repeated_chars',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber,
+              'nome_completo',
+              'Nome completo',
+              5,
+              nomeCompleto,
+              'name_repeated_chars',
               'Nome não pode ter 4 ou mais caracteres iguais sequenciais',
-            severity: 'error',
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
           break;
         }
       }
@@ -893,17 +906,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
       // Data não pode ser posterior à data atual
       if (birthDate > new Date()) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'data_nascimento',
-          fieldPosition: 6,
-          fieldValue: dataNascimento,
-          ruleName: 'birth_date_future',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'data_nascimento',
+            'Data de nascimento',
+            6,
+            dataNascimento,
+            'birth_date_future',
             'Data de nascimento não pode ser posterior à data atual',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Validações de idade por tipo de vínculo seriam implementadas aqui
@@ -921,17 +935,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // CPF obrigatório para brasileiros (nacionalidade 1 ou 2)
     if (['1', '2'].includes(nacionalidade) && !cpf) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'cpf',
-        fieldPosition: 4,
-        fieldValue: `nacionalidade:${nacionalidade}|cpf:${cpf}`,
-        ruleName: 'cpf_required_brazilian',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'cpf',
+          'CPF',
+          4,
+          `nacionalidade:${nacionalidade}|cpf:${cpf}`,
+          'cpf_required_brazilian',
           'CPF é obrigatório para pessoas com nacionalidade brasileira',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -945,17 +960,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // Povo indígena só pode ser preenchido se cor/raça = 5 (indígena)
     if (povoIndigena && corRaca !== '5') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'povo_indigena',
-        fieldPosition: 12,
-        fieldValue: povoIndigena,
-        ruleName: 'indigenous_people_race_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'povo_indigena',
+          'Código do povo/etnia indígena',
+          12,
+          povoIndigena,
+          'indigenous_people_race_required',
           'Povo indígena só pode ser preenchido quando cor/raça = 5 (Indígena)',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -969,31 +985,34 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // País deve ser 76 (Brasil) para nacionalidade 1 ou 2
     if (['1', '2'].includes(nacionalidade) && paisNacionalidade !== '76') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'pais_nacionalidade',
-        fieldPosition: 14,
-        fieldValue: paisNacionalidade,
-        ruleName: 'country_brazil_required',
-        errorMessage: 'País deve ser 76 (Brasil) para nacionalidade brasileira',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'pais_nacionalidade',
+          'País de nacionalidade',
+          14,
+          paisNacionalidade,
+          'country_brazil_required',
+          'País deve ser 76 (Brasil) para nacionalidade brasileira',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // País não pode ser 76 para nacionalidade 3 (estrangeira)
     if (nacionalidade === '3' && paisNacionalidade === '76') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'pais_nacionalidade',
-        fieldPosition: 14,
-        fieldValue: paisNacionalidade,
-        ruleName: 'country_foreign_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'pais_nacionalidade',
+          'País de nacionalidade',
+          14,
+          paisNacionalidade,
+          'country_foreign_required',
           'País não pode ser 76 (Brasil) para nacionalidade estrangeira',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -1007,32 +1026,34 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // Município obrigatório para nacionalidade 1 (brasileira)
     if (nacionalidade === '1' && !municipioNascimento) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'municipio_nascimento',
-        fieldPosition: 15,
-        fieldValue: municipioNascimento,
-        ruleName: 'birth_municipality_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'municipio_nascimento',
+          'Município de nascimento',
+          15,
+          municipioNascimento,
+          'birth_municipality_required',
           'Município de nascimento é obrigatório para nacionalidade brasileira',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Município não pode ser preenchido para nacionalidade diferente de 1
     if (nacionalidade !== '1' && municipioNascimento) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'municipio_nascimento',
-        fieldPosition: 15,
-        fieldValue: municipioNascimento,
-        ruleName: 'birth_municipality_not_allowed',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'municipio_nascimento',
+          'Município de nascimento',
+          15,
+          municipioNascimento,
+          'birth_municipality_not_allowed',
           'Município de nascimento não pode ser preenchido para nacionalidade não brasileira',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -1064,48 +1085,53 @@ export class PhysicalPersonsRule extends BaseRecordRule {
         (def) => def === '1',
       );
       if (!hasDeficiency) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'pessoa_deficiencia',
-          fieldPosition: 16,
-          fieldValue: pessoaDeficiencia,
-          ruleName: 'disability_type_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'pessoa_deficiencia',
+            'Pessoa com deficiência',
+            16,
+            pessoaDeficiencia,
+            'disability_type_required',
             'Pelo menos um tipo de deficiência deve ser informado quando pessoa tem deficiência',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
     // Validações de incompatibilidade entre deficiências
     if (deficiencias.cegueira === '1' && deficiencias.baixaVisao === '1') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'cegueira',
-        fieldPosition: 17,
-        fieldValue: deficiencias.cegueira,
-        ruleName: 'disability_incompatible',
-        errorMessage: 'Cegueira é incompatível com baixa visão',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'cegueira',
+          'Cegueira',
+          17,
+          deficiencias.cegueira,
+          'disability_incompatible',
+          'Cegueira é incompatível com baixa visão',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (
       deficiencias.surdez === '1' &&
       deficiencias.deficienciaAuditiva === '1'
     ) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'surdez',
-        fieldPosition: 20,
-        fieldValue: deficiencias.surdez,
-        ruleName: 'disability_incompatible',
-        errorMessage: 'Surdez é incompatível com deficiência auditiva',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'surdez',
+          'Surdez',
+          20,
+          deficiencias.surdez,
+          'disability_incompatible',
+          'Surdez é incompatível com deficiência auditiva',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Deficiência múltipla deve ser 1 quando há duas ou mais deficiências
@@ -1120,17 +1146,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     ].filter((def) => def === '1').length;
 
     if (deficienciasCount >= 2 && deficiencias.deficienciaMultipla !== '1') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'deficiencia_multipla',
-        fieldPosition: 25,
-        fieldValue: deficiencias.deficienciaMultipla,
-        ruleName: 'multiple_disability_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'deficiencia_multipla',
+          'Deficiência múltipla',
+          25,
+          deficiencias.deficienciaMultipla,
+          'multiple_disability_required',
           'Deficiência múltipla deve ser 1 quando há duas ou mais deficiências',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 
@@ -1155,16 +1182,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     if (pessoaTranstorno === '1') {
       const hasDisorder = transtornos.some((transtorno) => transtorno === '1');
       if (!hasDisorder) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'pessoa_transtorno_aprendizagem',
-          fieldPosition: 28,
-          fieldValue: pessoaTranstorno,
-          ruleName: 'learning_disorder_type_required',
-          errorMessage: 'Pelo menos um tipo de transtorno deve ser informado',
-          severity: 'error',
-        });
+        errors.push(
+          this.createError(
+            lineNumber,
+            'pessoa_transtorno_aprendizagem',
+            'Pessoa com transtorno de aprendizagem',
+            28,
+            pessoaTranstorno,
+            'learning_disorder_type_required',
+            'Pelo menos um tipo de transtorno deve ser informado',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
   }
@@ -1189,17 +1218,18 @@ export class PhysicalPersonsRule extends BaseRecordRule {
       }
 
       if (recursos.length === 0) {
-        errors.push({
-          lineNumber,
-          recordType: this.recordType,
-          fieldName: 'recursos_educacionais',
-          fieldPosition: 35,
-          fieldValue: 'nenhum_recurso_informado',
-          ruleName: 'educational_resources_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber,
+            'recursos_educacionais',
+            'Recursos educacionais',
+            35,
+            'nenhum_recurso_informado',
+            'educational_resources_required',
             'Recursos educacionais devem ser informados quando há deficiência ou transtorno',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
   }
@@ -1216,46 +1246,50 @@ export class PhysicalPersonsRule extends BaseRecordRule {
 
     // CEP só pode ser preenchido se país = 76 (Brasil)
     if (cep && paisResidencia !== '76') {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'cep',
-        fieldPosition: 51,
-        fieldValue: cep,
-        ruleName: 'cep_brazil_only',
-        errorMessage: 'CEP só pode ser preenchido para residência no Brasil',
-        severity: 'error',
-      });
+      errors.push(
+        this.createError(
+          lineNumber,
+          'cep',
+          'CEP',
+          51,
+          cep,
+          'cep_brazil_only',
+          'CEP só pode ser preenchido para residência no Brasil',
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Município obrigatório se CEP for preenchido
     if (cep && !municipioResidencia) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'municipio_residencia',
-        fieldPosition: 52,
-        fieldValue: municipioResidencia,
-        ruleName: 'municipality_required_with_cep',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'municipio_residencia',
+          'Município de residência',
+          52,
+          municipioResidencia,
+          'municipality_required_with_cep',
           'Município de residência é obrigatório quando CEP for preenchido',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Zona obrigatória se país = 76 (Brasil)
     if (paisResidencia === '76' && !zonaResidencia) {
-      errors.push({
-        lineNumber,
-        recordType: this.recordType,
-        fieldName: 'zona_residencia',
-        fieldPosition: 53,
-        fieldValue: zonaResidencia,
-        ruleName: 'residence_zone_required',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber,
+          'zona_residencia',
+          'Zona de residência',
+          53,
+          zonaResidencia,
+          'residence_zone_required',
           'Zona de residência é obrigatória para residência no Brasil',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
   }
 

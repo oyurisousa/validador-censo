@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
-import { RecordTypeEnum } from '../../../common/enums/record-types.enum';
+import {
+  RecordTypeEnum,
+  ValidationSeverity,
+} from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
 export interface StudentEnrollmentSchoolContext {
@@ -445,17 +448,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
     if (schoolContext) {
       const schoolCodeFromRecord = parts[1] || '';
       if (schoolCodeFromRecord !== schoolContext.schoolCode) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'school_code',
-          fieldPosition: 1,
-          fieldValue: schoolCodeFromRecord,
-          ruleName: 'school_code_mismatch',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'school_code',
+            'Código de escola - Inep',
+            1,
+            schoolCodeFromRecord,
+            'school_code_mismatch',
             'O campo "Código de escola - Inep" está diferente do registro 00 antecedente.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -467,16 +471,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       );
 
       if (!personExists) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'person_code',
-          fieldPosition: 2,
-          fieldValue: personCodeFromRecord,
-          ruleName: 'person_not_found',
-          errorMessage: 'Não há pessoa física com esse código nesta escola.',
-          severity: 'error',
-        });
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'person_code',
+            'Código de pessoa',
+            2,
+            personCodeFromRecord,
+            'person_not_found',
+            'Não há pessoa física com esse código nesta escola.',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -488,17 +494,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
         inepIdFromRecord.trim() !== '' &&
         inepIdFromRecord !== (personContext.inepId || '')
       ) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'inep_id',
-          fieldPosition: 3,
-          fieldValue: inepIdFromRecord,
-          ruleName: 'inep_id_mismatch',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'inep_id',
+            'Identificação Única (Inep)',
+            3,
+            inepIdFromRecord,
+            'inep_id_mismatch',
             'O campo está diferente da "Identificação Única (Inep)" do registro 30 correspondente.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -510,16 +517,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       );
 
       if (!classExists) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'class_code',
-          fieldPosition: 4,
-          fieldValue: classCodeFromRecord,
-          ruleName: 'class_not_found',
-          errorMessage: 'Não há turma com esse código nesta escola.',
-          severity: 'error',
-        });
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'class_code',
+            'Código da turma',
+            4,
+            classCodeFromRecord,
+            'class_not_found',
+            'Não há turma com esse código nesta escola.',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -559,31 +568,33 @@ export class StudentEnrollmentRule extends BaseRecordRule {
     const shouldHaveMulti = stage && stagesRequiringMulti.includes(stage);
 
     if (shouldHaveMulti && (!multiClass || multiClass.trim() === '')) {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'multi_class',
-        fieldPosition: 7,
-        fieldValue: multiClass,
-        ruleName: 'required_when_stage',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'multi_class',
+          'Turma multi',
+          7,
+          multiClass,
+          'required_when_stage',
           'O campo não foi preenchido quando deveria ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (!shouldHaveMulti && multiClass && multiClass.trim() !== '') {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'multi_class',
-        fieldPosition: 7,
-        fieldValue: multiClass,
-        ruleName: 'should_not_be_filled',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'multi_class',
+          'Turma multi',
+          7,
+          multiClass,
+          'should_not_be_filled',
           'O campo foi preenchido quando deveria não ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Validar valores específicos por etapa
@@ -622,16 +633,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       }
 
       if (validValues.length > 0 && !validValues.includes(multiClass)) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'multi_class',
-          fieldPosition: 7,
-          fieldValue: multiClass,
-          ruleName: 'invalid_value_for_stage',
-          errorMessage: 'O campo foi preenchido com valor não permitido.',
-          severity: 'error',
-        });
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'multi_class',
+            'Turma multi',
+            7,
+            multiClass,
+            'invalid_value_for_stage',
+            'O campo foi preenchido com valor não permitido.',
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
   }
@@ -650,17 +663,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       const hasAtLeastOne = aeFields.some((field) => field === '1');
 
       if (!hasAtLeastOne) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'specialized_education_services',
-          fieldPosition: 8,
-          fieldValue: aeFields.join(', '),
-          ruleName: 'at_least_one_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'specialized_education_services',
+            'Tipo de atendimento educacional especializado',
+            8,
+            aeFields.join(', '),
+            'at_least_one_required',
             '"Tipo de atendimento educacional especializado" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não).',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Verificar se todos os campos estão preenchidos
@@ -679,18 +693,32 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'alternative_communication',
             'optical_resources',
           ];
+          const fieldDescriptions = [
+            'Desenvolvimento de funções cognitivas',
+            'Desenvolvimento da vida autônoma',
+            'Enriquecimento curricular',
+            'Ensino do uso da Informática acessível',
+            'Ensino da Língua Brasileira de Sinais - Libras',
+            'Ensino de Língua Portuguesa como Segunda Língua',
+            'Ensino do uso do Soroban',
+            'Ensino do Sistema Braille',
+            'Orientação e mobilidade',
+            'Comunicação alternativa e aumentativa',
+            'Recursos ópticos e não ópticos',
+          ];
 
-          errors.push({
-            lineNumber: lineNumber || 0,
-            recordType: '60',
-            fieldName: fieldNames[index],
-            fieldPosition: 8 + index,
-            fieldValue: field,
-            ruleName: 'required_when_aee',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber || 0,
+              fieldNames[index],
+              fieldDescriptions[index],
+              8 + index,
+              field,
+              'required_when_aee',
               'O campo não foi preenchido quando deveria ser preenchido.',
-            severity: 'error',
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       });
     } else {
@@ -710,18 +738,32 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'alternative_communication',
             'optical_resources',
           ];
+          const fieldDescriptions = [
+            'Desenvolvimento de funções cognitivas',
+            'Desenvolvimento da vida autônoma',
+            'Enriquecimento curricular',
+            'Ensino do uso da Informática acessível',
+            'Ensino da Língua Brasileira de Sinais - Libras',
+            'Ensino de Língua Portuguesa como Segunda Língua',
+            'Ensino do uso do Soroban',
+            'Ensino do Sistema Braille',
+            'Orientação e mobilidade',
+            'Comunicação alternativa e aumentativa',
+            'Recursos ópticos e não ópticos',
+          ];
 
-          errors.push({
-            lineNumber: lineNumber || 0,
-            recordType: '60',
-            fieldName: fieldNames[index],
-            fieldPosition: 8 + index,
-            fieldValue: field,
-            ruleName: 'should_not_be_filled',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber || 0,
+              fieldNames[index],
+              fieldDescriptions[index],
+              8 + index,
+              field,
+              'should_not_be_filled',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: 'error',
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       });
     }
@@ -744,56 +786,60 @@ export class StudentEnrollmentRule extends BaseRecordRule {
     const shouldBeFilled = isPresencial && isCurricular && hasValidLocation;
 
     if (shouldBeFilled && (!schoolingSpace || schoolingSpace.trim() === '')) {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'schooling_other_space',
-        fieldPosition: 19,
-        fieldValue: schoolingSpace,
-        ruleName: 'required_when_conditions',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'schooling_other_space',
+          'Escolarização em espaço diferente da escola',
+          19,
+          schoolingSpace,
+          'required_when_conditions',
           'O campo não foi preenchido quando deveria ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (!shouldBeFilled && schoolingSpace && schoolingSpace.trim() !== '') {
       if (!isCurricular) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'schooling_other_space',
-          fieldPosition: 19,
-          fieldValue: schoolingSpace,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'schooling_other_space',
+            'Escolarização em espaço diferente da escola',
+            19,
+            schoolingSpace,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       } else if (!isPresencial) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'schooling_other_space',
-          fieldPosition: 19,
-          fieldValue: schoolingSpace,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'schooling_other_space',
+            'Escolarização em espaço diferente da escola',
+            19,
+            schoolingSpace,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       } else if (!hasValidLocation) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'schooling_other_space',
-          fieldPosition: 19,
-          fieldValue: schoolingSpace,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'schooling_other_space',
+            'Escolarização em espaço diferente da escola',
+            19,
+            schoolingSpace,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
   }
@@ -823,17 +869,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       shouldHaveTransport &&
       (!publicTransport || publicTransport.trim() === '')
     ) {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'public_transport',
-        fieldPosition: 20,
-        fieldValue: publicTransport,
-        ruleName: 'required_when_conditions',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'public_transport',
+          'Utiliza transporte escolar público',
+          20,
+          publicTransport,
+          'required_when_conditions',
           'O campo não foi preenchido quando deveria ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (
@@ -842,41 +889,44 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       publicTransport.trim() !== ''
     ) {
       if (!isPresencialOrSemi) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'public_transport',
-          fieldPosition: 20,
-          fieldValue: publicTransport,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'public_transport',
+            'Utiliza transporte escolar público',
+            20,
+            publicTransport,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       } else if (!isCurricular) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'public_transport',
-          fieldPosition: 20,
-          fieldValue: publicTransport,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'public_transport',
+            'Utiliza transporte escolar público',
+            20,
+            publicTransport,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       } else if (!isBrazilResident) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'public_transport',
-          fieldPosition: 20,
-          fieldValue: publicTransport,
-          ruleName: 'should_not_be_filled',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'public_transport',
+            'Utiliza transporte escolar público',
+            20,
+            publicTransport,
+            'should_not_be_filled',
             'O campo foi preenchido quando deveria não ser preenchido.',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     }
 
@@ -887,17 +937,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       usesTransport &&
       (!transportAuthority || transportAuthority.trim() === '')
     ) {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'transport_authority',
-        fieldPosition: 21,
-        fieldValue: transportAuthority,
-        ruleName: 'required_when_transport',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'transport_authority',
+          'Poder público responsável pelo transporte escolar',
+          21,
+          transportAuthority,
+          'required_when_transport',
           'O campo não foi preenchido quando deveria ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     if (
@@ -905,17 +956,18 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       transportAuthority &&
       transportAuthority.trim() !== ''
     ) {
-      errors.push({
-        lineNumber: lineNumber || 0,
-        recordType: '60',
-        fieldName: 'transport_authority',
-        fieldPosition: 21,
-        fieldValue: transportAuthority,
-        ruleName: 'should_not_be_filled',
-        errorMessage:
+      errors.push(
+        this.createError(
+          lineNumber || 0,
+          'transport_authority',
+          'Poder público responsável pelo transporte escolar',
+          21,
+          transportAuthority,
+          'should_not_be_filled',
           'O campo foi preenchido quando deveria não ser preenchido.',
-        severity: 'error',
-      });
+          ValidationSeverity.ERROR,
+        ),
+      );
     }
 
     // Validar tipos de veículo
@@ -934,35 +986,49 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'vehicle_water_35',
             'vehicle_water_above',
           ];
+          const vehicleDescriptions = [
+            'Bicicleta',
+            'Microônibus',
+            'Ônibus',
+            'Tração animal',
+            'Van/Kombi',
+            'Outro veículo rodoviário',
+            'Embarcação até 5 passageiros',
+            'Embarcação de 5 a 15 passageiros',
+            'Embarcação de 15 a 35 passageiros',
+            'Embarcação acima de 35 passageiros',
+          ];
 
-          errors.push({
-            lineNumber: lineNumber || 0,
-            recordType: '60',
-            fieldName: vehicleFieldNames[index],
-            fieldPosition: 22 + index,
-            fieldValue: field,
-            ruleName: 'required_when_transport',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber || 0,
+              vehicleFieldNames[index],
+              vehicleDescriptions[index],
+              22 + index,
+              field,
+              'required_when_transport',
               'O campo não foi preenchido quando deveria ser preenchido.',
-            severity: 'error',
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       });
 
       // Verificar se todos são 0 (não permitido)
       const allZero = vehicleFields.every((field) => field === '0');
       if (allZero) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'vehicle_types',
-          fieldPosition: 22,
-          fieldValue: vehicleFields.join(', '),
-          ruleName: 'at_least_one_vehicle_required',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'vehicle_types',
+            'Tipo de veículo utilizado no transporte escolar',
+            22,
+            vehicleFields.join(', '),
+            'at_least_one_vehicle_required',
             'Todas as opções de tipo de veículo utilizado no transporte escolar público foram preenchidas com 0 (Não).',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       // Verificar incompatibilidades (todos rodoviários ou todos aquaviários = 1)
@@ -973,31 +1039,33 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       const allWaterOne = waterVehicles.every((field) => field === '1');
 
       if (allRoadOne) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'road_vehicles',
-          fieldPosition: 22,
-          fieldValue: roadVehicles.join(', '),
-          ruleName: 'all_road_vehicles_selected',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'road_vehicles',
+            'Veículos rodoviários utilizados no transporte escolar',
+            22,
+            roadVehicles.join(', '),
+            'all_road_vehicles_selected',
             'Todas as opções de tipo de veículo utilizado no transporte escolar público rodoviário foram preenchidas com 1 (Sim).',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
 
       if (allWaterOne) {
-        errors.push({
-          lineNumber: lineNumber || 0,
-          recordType: '60',
-          fieldName: 'water_vehicles',
-          fieldPosition: 28,
-          fieldValue: waterVehicles.join(', '),
-          ruleName: 'all_water_vehicles_selected',
-          errorMessage:
+        errors.push(
+          this.createError(
+            lineNumber || 0,
+            'water_vehicles',
+            'Veículos aquaviários utilizados no transporte escolar',
+            28,
+            waterVehicles.join(', '),
+            'all_water_vehicles_selected',
             'Todas as opções de tipo de veículo utilizado no transporte escolar público aquaviário foram preenchidas com 1 (Sim).',
-          severity: 'error',
-        });
+            ValidationSeverity.ERROR,
+          ),
+        );
       }
     } else {
       // Não usa transporte - verificar se veículos não estão preenchidos
@@ -1015,18 +1083,31 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'vehicle_water_35',
             'vehicle_water_above',
           ];
+          const vehicleDescriptions = [
+            'Bicicleta',
+            'Microônibus',
+            'Ônibus',
+            'Tração animal',
+            'Van/Kombi',
+            'Outro veículo rodoviário',
+            'Embarcação até 5 passageiros',
+            'Embarcação de 5 a 15 passageiros',
+            'Embarcação de 15 a 35 passageiros',
+            'Embarcação acima de 35 passageiros',
+          ];
 
-          errors.push({
-            lineNumber: lineNumber || 0,
-            recordType: '60',
-            fieldName: vehicleFieldNames[index],
-            fieldPosition: 22 + index,
-            fieldValue: field,
-            ruleName: 'should_not_be_filled',
-            errorMessage:
+          errors.push(
+            this.createError(
+              lineNumber || 0,
+              vehicleFieldNames[index],
+              vehicleDescriptions[index],
+              22 + index,
+              field,
+              'should_not_be_filled',
               'O campo foi preenchido quando deveria não ser preenchido.',
-            severity: 'error',
-          });
+              ValidationSeverity.ERROR,
+            ),
+          );
         }
       });
     }
