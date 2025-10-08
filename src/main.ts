@@ -24,11 +24,12 @@ async function bootstrap() {
     }),
   );
 
-  // Configurar CORS
+  // Configurar CORS - Permitir todos os origens
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
+    origin: '*',
+    methods: '*',
+    allowedHeaders: '*',
+    credentials: false,
   });
 
   // Configurar prefixo global (deve vir antes do Swagger)
