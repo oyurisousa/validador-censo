@@ -11,6 +11,7 @@ import {
 import { FieldValidatorService } from '../validators/field-validator.service';
 import { RecordValidatorService } from '../validators/record-validator.service';
 import { FileValidatorService } from '../validators/file-validator.service';
+import { StructuralValidatorService } from '../validators/structural-validator.service';
 import { SchoolManagerBondRule } from '../rules/record-rules/school-manager-bond.rule';
 import { SchoolProfessionalBondRule } from '../rules/record-rules/school-professional-bond.rule';
 import { StudentEnrollmentRule } from '../rules/record-rules/student-enrollment.rule';
@@ -47,6 +48,7 @@ export class ValidationEngineService {
     private readonly fieldValidator: FieldValidatorService,
     private readonly recordValidator: RecordValidatorService,
     private readonly fileValidator: FileValidatorService,
+    private readonly structuralValidator: StructuralValidatorService,
     private readonly schoolManagerBondRule: SchoolManagerBondRule,
     private readonly schoolProfessionalBondRule: SchoolProfessionalBondRule,
     private readonly studentEnrollmentRule: StudentEnrollmentRule,
@@ -69,6 +71,50 @@ export class ValidationEngineService {
       fileName,
     );
     errors.push(...fileValidationErrors);
+
+    // Validações estruturais gerais
+    const structuralErrors = this.structuralValidator.validateStructure(lines);
+    errors.push(...structuralErrors);
+
+    // Validação de codificação
+    const encodingErrors = this.structuralValidator.validateEncoding(content);
+    errors.push(...encodingErrors);
+
+    // Validação de caracteres
+    const characterErrors =
+      this.structuralValidator.validateCharacters(content);
+    errors.push(...characterErrors);
+
+    // Se há erros estruturais críticos (número de campos incorreto), não prosseguir
+    const hasCriticalStructuralErrors = structuralErrors.some(
+      (error) => error.ruleName === 'field_count_validation',
+    );
+
+    if (hasCriticalStructuralErrors) {
+      const endTime = Date.now();
+      const processingTime = endTime - startTime;
+
+      const finalErrors = errors.filter((e) => e.severity === 'error');
+      const finalWarnings = errors.filter((e) => e.severity === 'warning');
+
+      const fileMetadata: FileMetadata = {
+        fileName,
+        fileSize: content.length,
+        totalLines: lines.length,
+        encoding: 'UTF-8',
+        uploadDate: new Date(),
+      };
+
+      return {
+        isValid: finalErrors.length === 0,
+        totalRecords: lines.length,
+        processedRecords: 0, // Não processou registros devido a erros estruturais
+        processingTime,
+        errors: finalErrors,
+        warnings: finalWarnings,
+        fileMetadata,
+      };
+    }
 
     // Validação linha por linha
     for (let i = 0; i < lines.length; i++) {

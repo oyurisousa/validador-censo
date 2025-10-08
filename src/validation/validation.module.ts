@@ -3,6 +3,7 @@ import { ValidationEngineService } from './engine/validation-engine.service';
 import { FieldValidatorService } from './validators/field-validator.service';
 import { RecordValidatorService } from './validators/record-validator.service';
 import { FileValidatorService } from './validators/file-validator.service';
+import { StructuralValidatorService } from './validators/structural-validator.service';
 import { RecordRulesManagerService } from './rules/record-rules-manager.service';
 import { SchoolIdentificationRule } from './rules/record-rules/school-identification.rule';
 import { SchoolCharacterizationRule } from './rules/record-rules/school-characterization.rule';
@@ -19,6 +20,7 @@ import { FileEndRule } from './rules/record-rules/file-end.rule';
     FieldValidatorService,
     RecordValidatorService,
     FileValidatorService,
+    StructuralValidatorService,
     RecordRulesManagerService,
     SchoolIdentificationRule,
     SchoolCharacterizationRule,
@@ -34,6 +36,7 @@ import { FileEndRule } from './rules/record-rules/file-end.rule';
     FieldValidatorService,
     RecordValidatorService,
     FileValidatorService,
+    StructuralValidatorService,
     RecordRulesManagerService,
   ],
 })
