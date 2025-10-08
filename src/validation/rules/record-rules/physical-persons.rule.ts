@@ -643,8 +643,571 @@ export class PhysicalPersonsRule extends BaseRecordRule {
       description:
         'Escolaridade (1-Não concluiu fundamental, 2-Fundamental, 6-Superior, 7-Médio)',
     },
-    // Campos adicionais 57-107 (implementação resumida para os campos principais)
-    // Campos de escolaridade, pós-graduação e outros cursos seguirão o mesmo padrão
+    // Campo 57: Tipo de ensino médio cursado
+    {
+      position: 56,
+      name: 'tipo_ensino_medio',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[1234]$/,
+      type: 'code',
+      description:
+        'Tipo de ensino médio (1-Formação geral, 2-Normal/magistério, 3-Curso técnico, 4-Magistério indígena)',
+    },
+    // Campo 58: Código do Curso 1
+    {
+      position: 57,
+      name: 'codigo_curso_1',
+      required: false,
+      minLength: 8,
+      maxLength: 8,
+      type: 'string',
+      description: 'Código do curso superior 1',
+    },
+    // Campo 59: Ano de Conclusão 1
+    {
+      position: 58,
+      name: 'ano_conclusao_1',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão do curso 1',
+    },
+    // Campo 60: Instituição de educação superior 1
+    {
+      position: 59,
+      name: 'ies_1',
+      required: false,
+      minLength: 1,
+      maxLength: 7,
+      pattern: /^\d{1,7}$/,
+      type: 'code',
+      description: 'Código da IES 1',
+    },
+    // Campo 61: Código do Curso 2
+    {
+      position: 60,
+      name: 'codigo_curso_2',
+      required: false,
+      minLength: 8,
+      maxLength: 8,
+      type: 'string',
+      description: 'Código do curso superior 2',
+    },
+    // Campo 62: Ano de Conclusão 2
+    {
+      position: 61,
+      name: 'ano_conclusao_2',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão do curso 2',
+    },
+    // Campo 63: Instituição de educação superior 2
+    {
+      position: 62,
+      name: 'ies_2',
+      required: false,
+      minLength: 1,
+      maxLength: 7,
+      pattern: /^\d{1,7}$/,
+      type: 'code',
+      description: 'Código da IES 2',
+    },
+    // Campo 64: Código do Curso 3
+    {
+      position: 63,
+      name: 'codigo_curso_3',
+      required: false,
+      minLength: 8,
+      maxLength: 8,
+      type: 'string',
+      description: 'Código do curso superior 3',
+    },
+    // Campo 65: Ano de Conclusão 3
+    {
+      position: 64,
+      name: 'ano_conclusao_3',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão do curso 3',
+    },
+    // Campo 66: Instituição de educação superior 3
+    {
+      position: 65,
+      name: 'ies_3',
+      required: false,
+      minLength: 1,
+      maxLength: 7,
+      pattern: /^\d{1,7}$/,
+      type: 'code',
+      description: 'Código da IES 3',
+    },
+    // Campo 67: Área do conhecimento/componentes curriculares 1
+    {
+      position: 66,
+      name: 'area_conhecimento_1',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área do conhecimento 1',
+    },
+    // Campo 68: Área do conhecimento/componentes curriculares 2
+    {
+      position: 67,
+      name: 'area_conhecimento_2',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área do conhecimento 2',
+    },
+    // Campo 69: Área do conhecimento/componentes curriculares 3
+    {
+      position: 68,
+      name: 'area_conhecimento_3',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área do conhecimento 3',
+    },
+    // Campo 70: Tipo de pós-graduação 1
+    {
+      position: 69,
+      name: 'tipo_pos_1',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 1 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 71: Área da pós-graduação 1
+    {
+      position: 70,
+      name: 'area_pos_1',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 1',
+    },
+    // Campo 72: Ano de conclusão da pós-graduação 1
+    {
+      position: 71,
+      name: 'ano_pos_1',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 1',
+    },
+    // Campo 73: Tipo de pós-graduação 2
+    {
+      position: 72,
+      name: 'tipo_pos_2',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 2 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 74: Área da pós-graduação 2
+    {
+      position: 73,
+      name: 'area_pos_2',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 2',
+    },
+    // Campo 75: Ano de conclusão da pós-graduação 2
+    {
+      position: 74,
+      name: 'ano_pos_2',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 2',
+    },
+    // Campo 76: Tipo de pós-graduação 3
+    {
+      position: 75,
+      name: 'tipo_pos_3',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 3 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 77: Área da pós-graduação 3
+    {
+      position: 76,
+      name: 'area_pos_3',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 3',
+    },
+    // Campo 78: Ano de conclusão da pós-graduação 3
+    {
+      position: 77,
+      name: 'ano_pos_3',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 3',
+    },
+    // Campo 79: Tipo de pós-graduação 4
+    {
+      position: 78,
+      name: 'tipo_pos_4',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 4 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 80: Área da pós-graduação 4
+    {
+      position: 79,
+      name: 'area_pos_4',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 4',
+    },
+    // Campo 81: Ano de conclusão da pós-graduação 4
+    {
+      position: 80,
+      name: 'ano_pos_4',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 4',
+    },
+    // Campo 82: Tipo de pós-graduação 5
+    {
+      position: 81,
+      name: 'tipo_pos_5',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 5 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 83: Área da pós-graduação 5
+    {
+      position: 82,
+      name: 'area_pos_5',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 5',
+    },
+    // Campo 84: Ano de conclusão da pós-graduação 5
+    {
+      position: 83,
+      name: 'ano_pos_5',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 5',
+    },
+    // Campo 85: Tipo de pós-graduação 6
+    {
+      position: 84,
+      name: 'tipo_pos_6',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[123]$/,
+      type: 'code',
+      description:
+        'Tipo de pós-graduação 6 (1-Especialização, 2-Mestrado, 3-Doutorado)',
+    },
+    // Campo 86: Área da pós-graduação 6
+    {
+      position: 85,
+      name: 'area_pos_6',
+      required: false,
+      minLength: 1,
+      maxLength: 2,
+      pattern: /^\d{1,2}$/,
+      type: 'code',
+      description: 'Área da pós-graduação 6',
+    },
+    // Campo 87: Ano de conclusão da pós-graduação 6
+    {
+      position: 86,
+      name: 'ano_pos_6',
+      required: false,
+      minLength: 4,
+      maxLength: 4,
+      pattern: /^\d{4}$/,
+      type: 'number',
+      description: 'Ano de conclusão da pós-graduação 6',
+    },
+    // Campo 88: Não tem pós-graduação concluída
+    {
+      position: 87,
+      name: 'sem_pos_graduacao',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[1]$/,
+      type: 'code',
+      description: 'Não tem pós-graduação concluída (1-Sim)',
+    },
+    // Campo 89: Creche (0 a 3 anos)
+    {
+      position: 88,
+      name: 'curso_creche',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Creche (0-Não, 1-Sim)',
+    },
+    // Campo 90: Pré-escola (4 e 5 anos)
+    {
+      position: 89,
+      name: 'curso_pre_escola',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Pré-escola (0-Não, 1-Sim)',
+    },
+    // Campo 91: Anos iniciais do ensino fundamental
+    {
+      position: 90,
+      name: 'curso_anos_iniciais',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Anos iniciais (0-Não, 1-Sim)',
+    },
+    // Campo 92: Anos finais do ensino fundamental
+    {
+      position: 91,
+      name: 'curso_anos_finais',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Anos finais (0-Não, 1-Sim)',
+    },
+    // Campo 93: Ensino médio
+    {
+      position: 92,
+      name: 'curso_ensino_medio',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Ensino médio (0-Não, 1-Sim)',
+    },
+    // Campo 94: Educação de jovens e adultos
+    {
+      position: 93,
+      name: 'curso_eja',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso EJA (0-Não, 1-Sim)',
+    },
+    // Campo 95: Educação especial
+    {
+      position: 94,
+      name: 'curso_educacao_especial',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Educação especial (0-Não, 1-Sim)',
+    },
+    // Campo 96: Educação Indígena
+    {
+      position: 95,
+      name: 'curso_indigena',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Educação Indígena (0-Não, 1-Sim)',
+    },
+    // Campo 97: Educação do campo
+    {
+      position: 96,
+      name: 'curso_campo',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Educação do campo (0-Não, 1-Sim)',
+    },
+    // Campo 98: Educação ambiental
+    {
+      position: 97,
+      name: 'curso_ambiental',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Educação ambiental (0-Não, 1-Sim)',
+    },
+    // Campo 99: Educação em direitos humanos
+    {
+      position: 98,
+      name: 'curso_direitos_humanos',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Direitos humanos (0-Não, 1-Sim)',
+    },
+    // Campo 100: Educação bilíngue de surdos
+    {
+      position: 99,
+      name: 'curso_bilingue_surdos',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Bilíngue de surdos (0-Não, 1-Sim)',
+    },
+    // Campo 101: Educação e Tecnologia de Informação e Comunicação (TIC)
+    {
+      position: 100,
+      name: 'curso_tic',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso TIC (0-Não, 1-Sim)',
+    },
+    // Campo 102: Gênero e diversidade sexual
+    {
+      position: 101,
+      name: 'curso_genero',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Gênero e diversidade (0-Não, 1-Sim)',
+    },
+    // Campo 103: Direitos de criança e adolescente
+    {
+      position: 102,
+      name: 'curso_direitos_crianca',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Direitos de criança (0-Não, 1-Sim)',
+    },
+    // Campo 104: Educação para as relações étnico-raciais e História e cultura afro-brasileira e africana
+    {
+      position: 103,
+      name: 'curso_etnico_racial',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Relações étnico-raciais (0-Não, 1-Sim)',
+    },
+    // Campo 105: Gestão Escolar
+    {
+      position: 104,
+      name: 'curso_gestao',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Curso Gestão Escolar (0-Não, 1-Sim)',
+    },
+    // Campo 106: Outros
+    {
+      position: 105,
+      name: 'curso_outros',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Outros cursos (0-Não, 1-Sim)',
+    },
+    // Campo 107: Nenhum
+    {
+      position: 106,
+      name: 'curso_nenhum',
+      required: false,
+      minLength: 1,
+      maxLength: 1,
+      pattern: /^[01]$/,
+      type: 'code',
+      description: 'Nenhum curso específico (0-Não, 1-Sim)',
+    },
     // Campo 108: Endereço Eletrônico (e-mail)
     {
       position: 107,

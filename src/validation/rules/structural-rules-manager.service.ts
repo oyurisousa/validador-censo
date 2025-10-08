@@ -123,6 +123,7 @@ export class StructuralRulesManagerService {
             classesWithStudents: new Set(),
             classesWithProfessionals: new Set(),
             allClasses: new Set(),
+            classLineNumbers: new Map(), // ✅ Adicionar map de linhas
             totalStudents: 0,
             totalProfessionals: 0,
           });
@@ -146,7 +147,15 @@ export class StructuralRulesManagerService {
               break;
             case '20':
               schoolStructure.hasRecord20 = true;
-              schoolStructure.allClasses.add(parts[2] || '');
+              const classCode = parts[2] || '';
+              schoolStructure.allClasses.add(classCode);
+              // ✅ Rastrear o número da linha da turma
+              if (
+                classCode &&
+                !schoolStructure.classLineNumbers.has(classCode)
+              ) {
+                schoolStructure.classLineNumbers.set(classCode, i + 1);
+              }
               break;
             case '30':
               schoolStructure.hasRecord30 = true;

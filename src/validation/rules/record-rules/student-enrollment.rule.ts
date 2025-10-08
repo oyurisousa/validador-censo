@@ -94,6 +94,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       required: false,
       minLength: 0,
       maxLength: 0,
+      pattern: /^$/,
       type: 'string',
       description: 'Código da turma no INEP (não deve ser preenchido)',
     },
@@ -104,6 +105,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       required: false,
       minLength: 0,
       maxLength: 0,
+      pattern: /^$/,
       type: 'string',
       description:
         'Código da Matrícula do(a) aluno(a) (não deve ser preenchido)',
@@ -118,6 +120,278 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       pattern: /^(1|2|14|15|16|17|18|19|20|21|39|40|41|69|70)?$/,
       type: 'code',
       description: 'Turma multi (condicional baseado na etapa)',
+    },
+    // Campo 9: Desenvolvimento de funções cognitivas
+    {
+      position: 8,
+      name: 'cognitive_functions',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Desenvolvimento de funções cognitivas (0-Não, 1-Sim)',
+    },
+    // Campo 10: Desenvolvimento de vida autônoma
+    {
+      position: 9,
+      name: 'autonomous_life',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Desenvolvimento de vida autônoma (0-Não, 1-Sim)',
+    },
+    // Campo 11: Enriquecimento curricular
+    {
+      position: 10,
+      name: 'curriculum_enrichment',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Enriquecimento curricular (0-Não, 1-Sim)',
+    },
+    // Campo 12: Ensino da informática acessível
+    {
+      position: 11,
+      name: 'accessible_computing',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Ensino da informática acessível (0-Não, 1-Sim)',
+    },
+    // Campo 13: Ensino da Língua Brasileira de Sinais (Libras)
+    {
+      position: 12,
+      name: 'libras_teaching',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Ensino da Língua Brasileira de Sinais - Libras (0-Não, 1-Sim)',
+    },
+    // Campo 14: Ensino da Língua Portuguesa como Segunda Língua
+    {
+      position: 13,
+      name: 'portuguese_second_language',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Ensino da Língua Portuguesa como Segunda Língua (0-Não, 1-Sim)',
+    },
+    // Campo 15: Ensino das técnicas do cálculo no Soroban
+    {
+      position: 14,
+      name: 'soroban_techniques',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Ensino das técnicas do cálculo no Soroban (0-Não, 1-Sim)',
+    },
+    // Campo 16: Ensino de Sistema Braille
+    {
+      position: 15,
+      name: 'braille_system',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Ensino de Sistema Braille (0-Não, 1-Sim)',
+    },
+    // Campo 17: Ensino de técnicas para orientação e mobilidade
+    {
+      position: 16,
+      name: 'orientation_mobility',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Ensino de técnicas para orientação e mobilidade (0-Não, 1-Sim)',
+    },
+    // Campo 18: Ensino de uso da Comunicação Alternativa e Aumentativa (CAA)
+    {
+      position: 17,
+      name: 'alternative_communication',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Ensino de uso da Comunicação Alternativa e Aumentativa - CAA (0-Não, 1-Sim)',
+    },
+    // Campo 19: Ensino de uso de recursos ópticos e não ópticos
+    {
+      position: 18,
+      name: 'optical_resources',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Ensino de uso de recursos ópticos e não ópticos (0-Não, 1-Sim)',
+    },
+    // Campo 20: Recebe escolarização em outro espaço (diferente da escola)
+    {
+      position: 19,
+      name: 'schooling_other_space',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[123]?$/,
+      type: 'code',
+      description:
+        'Recebe escolarização em outro espaço (1-Não recebe, 2-Em hospital, 3-Em domicílio)',
+    },
+    // Campo 21: Transporte escolar público
+    {
+      position: 20,
+      name: 'public_transport',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Transporte escolar público (0-Não utiliza, 1-Utiliza)',
+    },
+    // Campo 22: Poder Público responsável pelo transporte escolar
+    {
+      position: 21,
+      name: 'transport_authority',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[12]?$/,
+      type: 'code',
+      description:
+        'Poder Público responsável pelo transporte escolar (1-Estadual, 2-Municipal)',
+    },
+    // Campo 23: Rodoviário - Bicicleta
+    {
+      position: 22,
+      name: 'vehicle_bicycle',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Bicicleta (0-Não, 1-Sim)',
+    },
+    // Campo 24: Rodoviário - Microônibus
+    {
+      position: 23,
+      name: 'vehicle_microbus',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Microônibus (0-Não, 1-Sim)',
+    },
+    // Campo 25: Rodoviário - Ônibus
+    {
+      position: 24,
+      name: 'vehicle_bus',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Ônibus (0-Não, 1-Sim)',
+    },
+    // Campo 26: Rodoviário – Tração Animal
+    {
+      position: 25,
+      name: 'vehicle_animal_traction',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Tração Animal (0-Não, 1-Sim)',
+    },
+    // Campo 27: Rodoviário - Vans/Kombis
+    {
+      position: 26,
+      name: 'vehicle_van',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Vans/Kombis (0-Não, 1-Sim)',
+    },
+    // Campo 28: Rodoviário - Outro
+    {
+      position: 27,
+      name: 'vehicle_other_road',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Rodoviário - Outro (0-Não, 1-Sim)',
+    },
+    // Campo 29: Aquaviário - Capacidade de até 5 aluno(a)s
+    {
+      position: 28,
+      name: 'vehicle_water_5',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Aquaviário - Capacidade de até 5 alunos (0-Não, 1-Sim)',
+    },
+    // Campo 30: Aquaviário - Capacidade entre 5 a 15 aluno(a)s
+    {
+      position: 29,
+      name: 'vehicle_water_15',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Aquaviário - Capacidade entre 5 a 15 alunos (0-Não, 1-Sim)',
+    },
+    // Campo 31: Aquaviário - Capacidade entre 15 a 35 aluno(a)s
+    {
+      position: 30,
+      name: 'vehicle_water_35',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description:
+        'Aquaviário - Capacidade entre 15 a 35 alunos (0-Não, 1-Sim)',
+    },
+    // Campo 32: Aquaviário - Capacidade acima de 35 aluno(a)s
+    {
+      position: 31,
+      name: 'vehicle_water_above',
+      required: false,
+      minLength: 0,
+      maxLength: 1,
+      pattern: /^[01]?$/,
+      type: 'code',
+      description: 'Aquaviário - Capacidade acima de 35 alunos (0-Não, 1-Sim)',
     },
   ];
 
@@ -156,7 +430,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
       vehicle_microbus: 'Rodoviário - Microônibus',
       vehicle_bus: 'Rodoviário - Ônibus',
       vehicle_animal_traction: 'Rodoviário – Tração Animal',
-      vehicle_vans: 'Rodoviário - Vans/Kombis',
+      vehicle_van: 'Rodoviário - Vans/Kombis',
       vehicle_other_road: 'Rodoviário - Outro',
       vehicle_water_5: 'Aquaviário - Capacidade de até 5 aluno(a)s',
       vehicle_water_15: 'Aquaviário - Capacidade entre 5 a 15 aluno(a)s',
@@ -384,7 +658,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           when: (value: string) => value && value.trim() !== '',
         },
       ],
-      vehicle_vans: [
+      vehicle_van: [
         {
           rule: 'pattern_validation',
           pattern: /^[01]$/,
@@ -979,7 +1253,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'vehicle_microbus',
             'vehicle_bus',
             'vehicle_animal_traction',
-            'vehicle_vans',
+            'vehicle_van',
             'vehicle_other_road',
             'vehicle_water_5',
             'vehicle_water_15',
@@ -1076,7 +1350,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'vehicle_microbus',
             'vehicle_bus',
             'vehicle_animal_traction',
-            'vehicle_vans',
+            'vehicle_van',
             'vehicle_other_road',
             'vehicle_water_5',
             'vehicle_water_15',

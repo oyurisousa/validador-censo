@@ -181,16 +181,19 @@ export class SchoolStructureRule extends BaseStructuralRule {
     if (school.hasRecord20 && school.allClasses.size > 0) {
       for (const classCode of school.allClasses) {
         if (!school.classesWithStudents.has(classCode)) {
+          // Usar o número da linha da turma (ou 0 se não encontrado)
+          const lineNumber = school.classLineNumbers.get(classCode) || 0;
           errors.push(
             this.createError(
-              0,
+              lineNumber,
               '20',
               'class_without_students',
-              2,
+              -1, // -1 = erro estrutural, não é sobre um campo específico
               classCode,
               'class_needs_students',
               'Turma informada sem aluno(a) vinculado a ela.',
               ValidationSeverity.ERROR,
+              'Estrutura de vínculos da turma', // fieldDescription
             ),
           );
         }
@@ -201,16 +204,19 @@ export class SchoolStructureRule extends BaseStructuralRule {
     if (school.hasRecord20 && school.allClasses.size > 0) {
       for (const classCode of school.allClasses) {
         if (!school.classesWithProfessionals.has(classCode)) {
+          // Usar o número da linha da turma (ou 0 se não encontrado)
+          const lineNumber = school.classLineNumbers.get(classCode) || 0;
           errors.push(
             this.createError(
-              0,
+              lineNumber,
               '20',
               'class_without_professionals',
-              2,
+              -1, // -1 = erro estrutural, não é sobre um campo específico
               classCode,
               'class_needs_professionals',
               'Turma informada sem profissional escolar em sala de aula vinculado a ela.',
               ValidationSeverity.ERROR,
+              'Estrutura de vínculos da turma', // fieldDescription
             ),
           );
         }

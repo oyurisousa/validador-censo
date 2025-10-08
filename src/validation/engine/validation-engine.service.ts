@@ -185,10 +185,25 @@ export class ValidationEngineService {
       uploadDate: new Date(),
     };
 
+    // Ordenar erros por lineNumber (erros de linha 0 vão por último)
+    const sortedErrors = errors.sort((a, b) => {
+      // Se um dos erros é de linha 0 (estrutural/global), ele vai para o final
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      // Caso contrário, ordena por lineNumber crescente
+      return a.lineNumber - b.lineNumber;
+    });
+
+    const sortedWarnings = warnings.sort((a, b) => {
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      return a.lineNumber - b.lineNumber;
+    });
+
     return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
+      isValid: sortedErrors.length === 0,
+      errors: sortedErrors,
+      warnings: sortedWarnings,
       totalRecords: lines.length,
       processedRecords,
       processingTime,
@@ -283,10 +298,23 @@ export class ValidationEngineService {
       uploadDate: new Date(),
     };
 
+    // Ordenar erros por lineNumber (erros de linha 0 vão por último)
+    const sortedErrors = errors.sort((a, b) => {
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      return a.lineNumber - b.lineNumber;
+    });
+
+    const sortedWarnings = warnings.sort((a, b) => {
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      return a.lineNumber - b.lineNumber;
+    });
+
     return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
+      isValid: sortedErrors.length === 0,
+      errors: sortedErrors,
+      warnings: sortedWarnings,
       totalRecords: records.length,
       processedRecords,
       processingTime,
@@ -569,6 +597,19 @@ export class ValidationEngineService {
     const finalErrors = errors.filter((e) => e.severity === 'error');
     const finalWarnings = errors.filter((e) => e.severity === 'warning');
 
+    // Ordenar erros por lineNumber (erros de linha 0 vão por último)
+    const sortedErrors = finalErrors.sort((a, b) => {
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      return a.lineNumber - b.lineNumber;
+    });
+
+    const sortedWarnings = finalWarnings.sort((a, b) => {
+      if (a.lineNumber === 0 && b.lineNumber !== 0) return 1;
+      if (a.lineNumber !== 0 && b.lineNumber === 0) return -1;
+      return a.lineNumber - b.lineNumber;
+    });
+
     const fileMetadata: FileMetadata = {
       fileName,
       fileSize: records.join('\n').length,
@@ -578,9 +619,9 @@ export class ValidationEngineService {
     };
 
     return {
-      isValid: finalErrors.length === 0,
-      errors: finalErrors,
-      warnings: finalWarnings,
+      isValid: sortedErrors.length === 0,
+      errors: sortedErrors,
+      warnings: sortedWarnings,
       totalRecords: records.length,
       processedRecords,
       processingTime,
@@ -588,13 +629,141 @@ export class ValidationEngineService {
     };
   }
 
-  private extractRecordType(line: string): RecordTypeEnum | null {
+  /**
+   * Valida uma única linha sem contexto de outros registros
+   * Útil para validação em tempo real no frontend
+   *
+   * VALIDAÇÕES EM ORDEM (com curto-circuito):
+   * 1. Tipo de registro informado é válido?
+   * 2. Linha tem o tipo de registro correto no primeiro campo?
+   * 3. Linha tem a quantidade correta de campos?
+   * 4. (Se tudo OK) Validar campos individuais
+   */
+  async validateSingleLine(
+    line: string,
+    recordTypeCode: string,
+    version: string = '2025',
+  ): Promise<{
+    errors: ValidationError[];
+    warnings: ValidationError[];
+  }> {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationError[] = [];
+
+    // ====== VALIDAÇÃO 1: Tipo de registro informado é válido? ======
+    const recordType = this.convertRecordTypeCodeToEnum(recordTypeCode);
+    if (!recordType) {
+      errors.push({
+        lineNumber: 1,
+        recordType: 'UNKNOWN',
+        fieldName: 'record_type',
+        fieldPosition: 0,
+        fieldValue: recordTypeCode,
+        ruleName: 'invalid_record_type',
+        errorMessage: `Tipo de registro inválido: ${recordTypeCode}. Valores permitidos: 00, 10, 20, 30, 40, 50, 60`,
+        severity: ValidationSeverity.ERROR,
+      });
+      return { errors, warnings }; // ⛔ PARA AQUI
+    }
+
+    // Separar campos da linha
     const parts = line.split('|');
-    if (parts.length === 0) return null;
 
-    const recordTypeCode = parts[0].trim();
+    // ====== VALIDAÇÃO 2: Tipo de registro na linha corresponde ao esperado? ======
+    const actualRecordType = parts[0]?.trim() || '';
+    if (actualRecordType !== recordTypeCode) {
+      errors.push({
+        lineNumber: 1,
+        recordType: recordTypeCode,
+        fieldName: 'record_type',
+        fieldPosition: 0,
+        fieldValue: actualRecordType,
+        ruleName: 'record_type_mismatch',
+        errorMessage: `Tipo de registro esperado: ${recordTypeCode}, mas a linha começa com: ${actualRecordType || '(vazio)'}`,
+        severity: ValidationSeverity.ERROR,
+      });
+      return { errors, warnings }; // ⛔ PARA AQUI - não faz sentido validar campos se o tipo está errado
+    }
 
+    // ====== VALIDAÇÃO 3: Quantidade de campos está correta? ======
+    const expectedFieldCount = this.getExpectedFieldCount(recordTypeCode);
+    if (parts.length !== expectedFieldCount) {
+      errors.push({
+        lineNumber: 1,
+        recordType: recordTypeCode,
+        fieldName: 'field_count',
+        fieldPosition: -1,
+        fieldValue: parts.length.toString(),
+        ruleName: 'field_count_validation',
+        errorMessage: `Registro tipo ${recordTypeCode} deve ter ${expectedFieldCount} campos, mas foram encontrados ${parts.length} campos`,
+        severity: ValidationSeverity.ERROR,
+      });
+      return { errors, warnings }; // ⛔ PARA AQUI - não faz sentido validar campos se a estrutura está errada
+    }
+
+    // ====== VALIDAÇÃO 4: Se passou nas validações críticas, validar campos ======
+    try {
+      const recordErrors = await this.recordValidator.validateRecord(
+        line,
+        recordType,
+        1, // lineNumber
+        version,
+      );
+
+      // Separar erros e warnings
+      errors.push(
+        ...recordErrors.filter((e) => e.severity === ValidationSeverity.ERROR),
+      );
+      warnings.push(
+        ...recordErrors.filter(
+          (e) => e.severity === ValidationSeverity.WARNING,
+        ),
+      );
+    } catch (error) {
+      errors.push({
+        lineNumber: 1,
+        recordType: recordTypeCode,
+        fieldName: 'line_processing',
+        fieldPosition: -1,
+        fieldValue: line.substring(0, 50),
+        ruleName: 'processing_error',
+        errorMessage: `Erro ao processar linha: ${(error as Error).message}`,
+        severity: ValidationSeverity.ERROR,
+      });
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
+   * Retorna a quantidade esperada de campos para cada tipo de registro
+   * Valores extraídos da contagem de "position:" em cada arquivo de regra
+   */
+  private getExpectedFieldCount(recordTypeCode: string): number {
     switch (recordTypeCode) {
+      case '00': // School Identification (school-identification.rule.ts)
+        return 56;
+      case '10': // School Characterization (school-characterization.rule.ts)
+        return 187;
+      case '20': // Classes (classes.rule.ts)
+        return 70;
+      case '30': // Physical Persons (physical-persons.rule.ts)
+        return 108;
+      case '40': // School Manager Bond (school-manager-bond.rule.ts)
+        return 7;
+      case '50': // School Professional Bond (school-professional-bond.rule.ts)
+        return 38;
+      case '60': // Student Enrollment (student-enrollment.rule.ts)
+        return 32;
+      case '99': // File End (file-end.rule.ts)
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
+  private convertRecordTypeCodeToEnum(code: string): RecordTypeEnum | null {
+    switch (code) {
       case '00':
         return RecordTypeEnum.SCHOOL_IDENTIFICATION;
       case '10':
@@ -614,5 +783,13 @@ export class ValidationEngineService {
       default:
         return null;
     }
+  }
+
+  private extractRecordType(line: string): RecordTypeEnum | null {
+    const parts = line.split('|');
+    if (parts.length === 0) return null;
+
+    const recordTypeCode = parts[0].trim();
+    return this.convertRecordTypeCodeToEnum(recordTypeCode);
   }
 }

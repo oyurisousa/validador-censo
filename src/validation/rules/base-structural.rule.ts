@@ -28,9 +28,11 @@ export interface SchoolStructure {
   hasRecord50: boolean;
   hasRecord60: boolean;
   record40Count: number;
-  classesWithStudents: Set<string>;
-  classesWithProfessionals: Set<string>;
-  allClasses: Set<string>;
+  classesWithStudents: Set<string>; // Mantido para compatibilidade
+  classesWithProfessionals: Set<string>; // Mantido para compatibilidade
+  allClasses: Set<string>; // Mantido para compatibilidade
+  // Novos maps para rastrear linha de cada turma
+  classLineNumbers: Map<string, number>; // classCode -> lineNumber
   totalStudents: number;
   totalProfessionals: number;
 }
@@ -145,6 +147,7 @@ export abstract class BaseStructuralRule {
             classesWithStudents: new Set(),
             classesWithProfessionals: new Set(),
             allClasses: new Set(),
+            classLineNumbers: new Map(), // Novo map para rastrear linhas
             totalStudents: 0,
             totalProfessionals: 0,
           });
@@ -161,7 +164,15 @@ export abstract class BaseStructuralRule {
               break;
             case '20':
               schoolStructure.hasRecord20 = true;
-              schoolStructure.allClasses.add(parts[2] || '');
+              const classCode = parts[2] || '';
+              schoolStructure.allClasses.add(classCode);
+              // Rastrear o número da linha da turma
+              if (
+                classCode &&
+                !schoolStructure.classLineNumbers.has(classCode)
+              ) {
+                schoolStructure.classLineNumbers.set(classCode, i + 1);
+              }
               break;
             case '30':
               schoolStructure.hasRecord30 = true;

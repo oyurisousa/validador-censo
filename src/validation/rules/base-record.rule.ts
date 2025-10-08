@@ -116,7 +116,12 @@ export abstract class BaseRecordRule {
     }
 
     // Se não é obrigatório e está vazio, não validar
-    if (!isRequired && (!value || value.trim() === '')) {
+    // EXCETO se maxLength é 0 (campo que não deve ser preenchido)
+    if (
+      !isRequired &&
+      (!value || value.trim() === '') &&
+      field.maxLength !== 0
+    ) {
       return errors;
     }
 

@@ -5,10 +5,8 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
-  UseFilters,
   BadRequestException,
 } from '@nestjs/common';
-import * as fs from 'fs/promises';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -16,7 +14,6 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiBody,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { ValidationEngineService } from '../../validation/engine/validation-engine.service';
 import {
@@ -24,7 +21,6 @@ import {
   ValidationResultDto,
 } from '../../common/dto/validation.dto';
 import { ValidationResult } from '../../common/interfaces/validation.interface';
-import { FileUploadGuard } from '../guards/file-upload.guard';
 import { ValidationGuard } from '../guards/validation.guard';
 import { RateLimitGuard } from '../guards/rate-limit.guard';
 import { ValidationLoggingInterceptor } from '../interceptors/validation-logging.interceptor';
@@ -35,13 +31,138 @@ import { ValidationLoggingInterceptor } from '../interceptors/validation-logging
 export class ValidationController {
   constructor(private readonly validationEngine: ValidationEngineService) {}
 
-  @Post('validate')
+  @Post('validate-line')
   @UseGuards(ValidationGuard)
   @UseInterceptors(ValidationLoggingInterceptor)
   @ApiOperation({
-    summary: 'Validar conteúdo do arquivo',
+    summary: 'Validar linha individual sem contexto',
     description:
-      'Valida registros do Censo Escolar. Suporta três formatos: lista de registros (recomendado), conteúdo concatenado ou arquivo do sistema.',
+      'Valida uma única linha de registro (tipo 00-60) sem considerar contexto de outros registros. ' +
+      'Valida apenas a estrutura e campos da linha específica.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        recordType: {
+          type: 'string',
+          description: 'Tipo do registro (00, 10, 20, 30, 40, 50, 60)',
+          example: '30',
+          enum: ['00', '10', '20', '30', '40', '50', '60'],
+        },
+        line: {
+          type: 'string',
+          description: 'Conteúdo da linha a ser validada',
+          example:
+            '30|12345678|DIR001|123456789012|12345678901|JOÃO DA SILVA|15/05/1980|1|MARIA DA SILVA||1|1||1|76||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||',
+        },
+        version: {
+          type: 'string',
+          description: 'Versão do layout (padrão: 2025)',
+          example: '2025',
+        },
+      },
+      required: ['recordType', 'line'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Validação realizada com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        isValid: { type: 'boolean' },
+        errors: { type: 'array', items: { type: 'object' } },
+        warnings: { type: 'array', items: { type: 'object' } },
+        recordType: { type: 'string' },
+        lineNumber: { type: 'number' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados de entrada inválidos',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Limite de requisições excedido',
+  })
+  async validateLine(
+    @Body()
+    request: {
+      recordType: string;
+      line: string;
+      version?: string;
+    },
+  ): Promise<{
+    isValid: boolean;
+    errors: any[];
+    warnings: any[];
+    recordType: string;
+    lineNumber: number;
+  }> {
+    if (!request.recordType) {
+      throw new BadRequestException('Tipo de registro é obrigatório');
+    }
+
+    if (!request.line || request.line.trim().length === 0) {
+      throw new BadRequestException('Linha é obrigatória');
+    }
+
+    const validRecordTypes = ['00', '10', '20', '30', '40', '50', '60'];
+    if (!validRecordTypes.includes(request.recordType)) {
+      throw new BadRequestException(
+        `Tipo de registro inválido. Valores permitidos: ${validRecordTypes.join(', ')}`,
+      );
+    }
+
+    // Validar sem contexto - apenas campos estruturais
+    const result = await this.validationEngine.validateSingleLine(
+      request.line,
+      request.recordType,
+      request.version || '2025',
+    );
+
+    return {
+      isValid: result.errors.length === 0,
+      errors: result.errors,
+      warnings: result.warnings,
+      recordType: request.recordType,
+      lineNumber: 1,
+    };
+  }
+
+  @Post('validate-file')
+  @UseGuards(ValidationGuard)
+  @UseInterceptors(ValidationLoggingInterceptor)
+  @ApiOperation({
+    summary: 'Validar arquivo completo com contexto',
+    description:
+      'Valida um arquivo completo do Censo Escolar (múltiplas linhas) considerando contexto entre registros, ' +
+      'estrutura do arquivo e validações cruzadas.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        lines: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Lista de linhas do arquivo (cada linha é um registro)',
+          example: [
+            '00|12345678|1|01/02/2025|31/12/2025|||||||||||||||||2|||||||||||||||||||||||||||||||||||||||||',
+            '30|12345678|DIR001|123456789012|12345678901|JOÃO DA SILVA|15/05/1980|1|MARIA DA SILVA||1|1||1|76||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||',
+            '40|12345678|DIR001|123456789012|1|4|1',
+          ],
+        },
+        version: {
+          type: 'string',
+          description: 'Versão do layout (padrão: 2025)',
+          example: '2025',
+        },
+      },
+      required: ['lines'],
+    },
   })
   @ApiResponse({
     status: 200,
@@ -56,42 +177,40 @@ export class ValidationController {
     status: 429,
     description: 'Limite de requisições excedido',
   })
-  async validateContent(
-    @Body() request: ValidationRequestDto,
+  async validateFileWithContext(
+    @Body() request: { lines: string[]; version?: string },
   ): Promise<ValidationResultDto> {
-    let result: ValidationResult;
-    let fileName: string;
-
-    if (request.records && request.records.length > 0) {
-      // Validação via lista de registros (formato preferido)
-      fileName = 'records.txt';
-      result = await this.validationEngine.validateRecords(
-        request.records,
-        fileName,
-        request.version || '2025',
-      );
-    } else if (request.content) {
-      // Validação via conteúdo concatenado (formato legado)
-      fileName = 'uploaded_file.txt';
-      result = await this.validationEngine.validateFile(
-        request.content,
-        fileName,
-        request.version || '2025',
-      );
-    } else if (request.filePath) {
-      // Validação via arquivo do sistema
-      const content = await fs.readFile(request.filePath, 'utf-8');
-      fileName = request.filePath.split('/').pop() || 'file.txt';
-      result = await this.validationEngine.validateFile(
-        content,
-        fileName,
-        request.version || '2025',
-      );
-    } else {
+    // Validação 1: Lista de linhas é obrigatória
+    if (!request.lines || !Array.isArray(request.lines)) {
       throw new BadRequestException(
-        'É obrigatório fornecer: records (lista de registros), content (conteúdo) ou filePath (caminho do arquivo)',
+        'Lista de linhas é obrigatória e deve ser um array',
       );
     }
+
+    // Validação 2: Lista não pode estar vazia
+    if (request.lines.length === 0) {
+      throw new BadRequestException('Lista de linhas não pode estar vazia');
+    }
+
+    // Validação 3: Remover linhas vazias e converter array para string
+    const validLines = request.lines.filter(
+      (line) => line && line.trim().length > 0,
+    );
+
+    if (validLines.length === 0) {
+      throw new BadRequestException(
+        'Nenhuma linha válida encontrada no arquivo',
+      );
+    }
+
+    // Converter array de linhas para string com quebras de linha
+    const content = validLines.join('\n');
+
+    const result = await this.validationEngine.validateFile(
+      content,
+      'file.txt',
+      request.version || '2025',
+    );
 
     // Converter Date para string para compatibilidade com DTO
     const resultDto = {
@@ -108,8 +227,10 @@ export class ValidationController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'), ValidationLoggingInterceptor)
   @ApiOperation({
-    summary: 'Upload e validação de arquivo',
-    description: 'Faz upload de um arquivo TXT e realiza a validação',
+    summary: 'Upload e validação completa de arquivo',
+    description:
+      'Faz upload de um arquivo TXT e realiza validação completa com contexto entre registros, ' +
+      'estrutura e validações cruzadas.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -143,7 +264,7 @@ export class ValidationController {
     status: 429,
     description: 'Limite de requisições excedido',
   })
-  async validateUploadedFile(
+  async uploadAndValidate(
     @UploadedFile() file: Express.Multer.File,
     @Body('version') version?: string,
   ): Promise<ValidationResultDto> {
@@ -167,7 +288,6 @@ export class ValidationController {
 
     // Validação 4: Nome do arquivo
     const fileName = file.originalname.replace('.txt', '');
-    const allowedPattern = /^[a-zA-Z0-9_\-\.]+$/;
     if (fileName.length > 100) {
       throw new BadRequestException(
         'Nome do arquivo muito longo. Máximo: 100 caracteres',
@@ -192,75 +312,6 @@ export class ValidationController {
       ...result,
       fileMetadata: {
         ...result.fileMetadata,
-        uploadDate: result.fileMetadata.uploadDate.toISOString(),
-      },
-    };
-
-    return resultDto as ValidationResultDto;
-  }
-
-  @Post('validate-with-context')
-  @UseGuards(ValidationGuard, RateLimitGuard)
-  @UseInterceptors(ValidationLoggingInterceptor)
-  @ApiOperation({
-    summary: 'Validação com contexto cruzado',
-    description:
-      'Realiza validação considerando contexto entre registros (00, 30, 40)',
-  })
-  @ApiBody({
-    type: ValidationRequestDto,
-    description: 'Lista de registros para validação com contexto',
-    examples: {
-      example1: {
-        summary: 'Exemplo com registros 00, 30 e 40',
-        value: {
-          records: [
-            '00|12345678|1|01/02/2025|31/12/2025|||||||||||||||||2|||||||||||||||||||||||||||||||||||||',
-            '30|12345678|DIR001|123456789012|12345678901|JOÃO DA SILVA|15/05/1980|1|MARIA DA SILVA||1|1||1|76||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||',
-            '40|12345678|DIR001|123456789012|1|4|1',
-          ],
-          version: '2025',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Validação com contexto realizada com sucesso',
-    type: ValidationResultDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Dados de entrada inválidos',
-  })
-  async validateWithContext(
-    @Body() validationRequest: ValidationRequestDto,
-  ): Promise<ValidationResultDto> {
-    if (!validationRequest.records || validationRequest.records.length === 0) {
-      throw new BadRequestException('Lista de registros não pode estar vazia');
-    }
-
-    const version = validationRequest.version || '2025';
-
-    const result: ValidationResult =
-      await this.validationEngine.validateRecordsWithContext(
-        validationRequest.records,
-        'context-validation.txt',
-        version,
-      );
-
-    const resultDto = {
-      isValid: result.isValid,
-      totalRecords: result.totalRecords,
-      processedRecords: result.processedRecords,
-      processingTime: result.processingTime,
-      errors: result.errors,
-      warnings: result.warnings,
-      fileMetadata: {
-        fileName: result.fileMetadata.fileName,
-        fileSize: result.fileMetadata.fileSize,
-        totalLines: result.fileMetadata.totalLines,
-        encoding: result.fileMetadata.encoding,
         uploadDate: result.fileMetadata.uploadDate.toISOString(),
       },
     };
