@@ -138,9 +138,9 @@ export class SchoolManagerBondRule extends BaseRecordRule {
   ): ValidationError[] {
     const errors: ValidationError[] = [];
 
-    // Validações básicas de campos
-    const fieldErrors = super.validate(parts, lineNumber);
-    errors.push(...fieldErrors);
+    // Validações básicas de campos e regras de negócio (chama o método validate padrão)
+    const basicErrors = this.validate(parts, lineNumber);
+    errors.push(...basicErrors);
 
     // Validações que dependem de contexto
     if (schoolContext) {
