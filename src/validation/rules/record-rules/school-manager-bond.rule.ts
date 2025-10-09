@@ -333,20 +333,8 @@ export class SchoolManagerBondRule extends BaseRecordRule {
       );
     }
 
-    if (cargo !== '1' && criterioAcesso) {
-      errors.push(
-        this.createError(
-          lineNumber,
-          'criterio_acesso_cargo',
-          'Critério de acesso ao cargo',
-          5,
-          criterioAcesso,
-          'access_criteria_not_allowed_non_director',
-          'Campo "Critério de acesso ao cargo" não pode ser preenchido quando cargo não for 1 (Diretor)',
-          ValidationSeverity.ERROR,
-        ),
-      );
-    }
+    // Note: access_criteria_not_allowed_non_director validation moved to validateAccessCriteriaWithContext()
+    // to avoid duplication and allow context-aware validation
   }
 
   private validateAccessCriteriaWithContext(
@@ -554,13 +542,6 @@ export class SchoolManagerBondRule extends BaseRecordRule {
   /**
    * Override validate method to include business rules
    */
-  validate(parts: string[], lineNumber: number): ValidationError[] {
-    // First run the standard field validation
-    const fieldErrors = super.validate(parts, lineNumber);
-
-    // Then run the business rules validation
-    const businessErrors = this.validateBusinessRules(parts, lineNumber);
-
-    return [...fieldErrors, ...businessErrors];
-  }
+  // Note: BusinessRules validation is already handled by super.validate()
+  // No need to override validate() method since BaseRecordRule already calls validateBusinessRules()
 }

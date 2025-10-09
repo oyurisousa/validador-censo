@@ -221,16 +221,8 @@ export class ValidationEngineService {
           version,
         );
 
-        errors.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.ERROR,
-          ),
-        );
-        warnings.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.WARNING,
-          ),
-        );
+        errors.push(...recordErrors.filter((e) => e.severity === 'error'));
+        warnings.push(...recordErrors.filter((e) => e.severity === 'warning'));
 
         processedRecords++;
       } catch (error) {
@@ -534,8 +526,14 @@ export class ValidationEngineService {
           if (contextErrors.length === 0 && personContext) {
             // Aqui poderia adicionar lógica para rastrear matrículas de alunos se necessário
           }
-        } else {
-          // Validação normal para outros tipos
+        } else if (
+          recordType === RecordTypeEnum.SCHOOL_IDENTIFICATION ||
+          recordType === RecordTypeEnum.CLASSES ||
+          recordType === RecordTypeEnum.PHYSICAL_PERSONS ||
+          recordType === RecordTypeEnum.SCHOOL_CHARACTERIZATION ||
+          recordType === RecordTypeEnum.FILE_END
+        ) {
+          // Validação normal para registros que não precisam de contexto especial
           const recordErrors = await this.recordValidator.validateRecord(
             record,
             recordType,
@@ -681,14 +679,8 @@ export class ValidationEngineService {
       );
 
       // Separar erros e warnings
-      errors.push(
-        ...recordErrors.filter((e) => e.severity === ValidationSeverity.ERROR),
-      );
-      warnings.push(
-        ...recordErrors.filter(
-          (e) => e.severity === ValidationSeverity.WARNING,
-        ),
-      );
+      errors.push(...recordErrors.filter((e) => e.severity === 'error'));
+      warnings.push(...recordErrors.filter((e) => e.severity === 'warning'));
     } catch (error) {
       errors.push({
         lineNumber: 1,

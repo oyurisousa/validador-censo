@@ -7,6 +7,7 @@ Durante a correção da validação de CPF em `physical-persons.rule.ts`, foi de
 ## Causa Raiz
 
 O problema ocorre quando um arquivo tem:
+
 1. Método `validate()` que chama `validateBusinessRules()`
 2. Método `validateWithContext()` que chama TANTO `super.validate()` QUANTO `validateBusinessRules()`
 
@@ -33,7 +34,7 @@ Isso resulta em `validateBusinessRules()` sendo executado **duas vezes**, causan
    - **Implementação correta**: `validateWithContext()` chama `this.validate()` uma única vez
 
 4. **`student-enrollment.rule.ts`**
-   - **Status**: ✅ OK  
+   - **Status**: ✅ OK
    - **Implementação correta**: `validateWithContext()` não chama validações duplicadas
 
 5. **`classes.rule.ts`**
@@ -51,31 +52,33 @@ Isso resulta em `validateBusinessRules()` sendo executado **duas vezes**, causan
 ## Padrão Correto vs Incorreto
 
 ### ❌ **PADRÃO INCORRETO (causava duplicação)**
+
 ```typescript
 validateWithContext(...): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     // Chama super.validate() que executa validações básicas
     const fieldErrors = super.validate(parts, lineNumber);
     errors.push(...fieldErrors);
-    
+
     // Chama validateBusinessRules() novamente (DUPLICAÇÃO!)
     const businessErrors = this.validateBusinessRules(parts, lineNumber);
     errors.push(...businessErrors);
-    
+
     // Validações contextuais específicas...
 }
 ```
 
 ### ✅ **PADRÃO CORRETO (sem duplicação)**
+
 ```typescript
 validateWithContext(...): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     // Chama this.validate() que já inclui tudo (sem duplicação)
     const basicErrors = this.validate(parts, lineNumber);
     errors.push(...basicErrors);
-    
+
     // Apenas validações contextuais específicas...
 }
 ```
@@ -95,13 +98,13 @@ validateWithContext(...): ValidationError[] {
 Os seguintes locais no `validation-engine.service.ts` chamam `validateWithContext`:
 
 1. **Linha 384**: `schoolManagerBondRule.validateWithContext()` ✅ Corrigido
-2. **Linha 453**: `schoolProfessionalBondRule.validateWithContext()` ✅ Já estava correto  
+2. **Linha 453**: `schoolProfessionalBondRule.validateWithContext()` ✅ Já estava correto
 3. **Linha 523**: `studentEnrollmentRule.validateWithContext()` ✅ Já estava correto
 
 ## Benefícios das Correções
 
 - ✅ **Eliminação de erros duplicados** em logs
-- ✅ **Melhor performance** (menos validações redundantes)  
+- ✅ **Melhor performance** (menos validações redundantes)
 - ✅ **Logs mais limpos** para análise e debug
 - ✅ **Consistência** entre diferentes tipos de registro
 - ✅ **Facilita manutenção** futura do código
@@ -109,23 +112,25 @@ Os seguintes locais no `validation-engine.service.ts` chamam `validateWithContex
 ## Como Evitar o Problema no Futuro
 
 ### **Regra de Ouro**:
+
 - Se um arquivo tem método `validate()` que chama `validateBusinessRules()`,
 - O método `validateWithContext()` deve chamar apenas `this.validate()` (não `super.validate()`)
 
 ### **Template Correto**:
+
 ```typescript
 validateWithContext(...): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     // Todas as validações básicas (campos + negócio)
     const basicErrors = this.validate(parts, lineNumber);
     errors.push(...basicErrors);
-    
+
     // Apenas validações que precisam de contexto externo
     if (context) {
         // validações específicas de contexto aqui
     }
-    
+
     return errors;
 }
 ```

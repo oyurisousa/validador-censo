@@ -2048,13 +2048,6 @@ export class PhysicalPersonsRule extends BaseRecordRule {
   /**
    * Override validate method to include business rules
    */
-  validate(parts: string[], lineNumber: number): ValidationError[] {
-    // First run the standard field validation
-    const fieldErrors = super.validate(parts, lineNumber);
-
-    // Then run the business rules validation
-    const businessErrors = this.validateBusinessRules(parts, lineNumber);
-
-    return [...fieldErrors, ...businessErrors];
-  }
+  // Note: BusinessRules validation is already handled by super.validate()
+  // No need to override validate() method since BaseRecordRule already calls validateBusinessRules()
 }
