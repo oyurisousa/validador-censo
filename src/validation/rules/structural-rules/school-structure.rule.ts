@@ -118,7 +118,7 @@ export class SchoolStructureRule extends BaseStructuralRule {
             2,
             situacao,
             'incomplete_active_school',
-            `Estrutura da escola incorreta, escola com estrutura diferente a sua situação de funcionamento. Escolas em atividade devem ter registros: ${missingRecords.join(', ')}.`,
+            `Estrutura da escola incorreta, escola com estrutura diferente a sua situação de funcionamento. Escolas em atividade devem ter registros obrigatórios: ${missingRecords.join(', ')}. Registros 50 (Profissionais) e 60 (Alunos) são obrigatórios apenas se houver turmas (registro 20).`,
             ValidationSeverity.ERROR,
           ),
         );

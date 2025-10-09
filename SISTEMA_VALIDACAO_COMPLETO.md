@@ -351,10 +351,12 @@ if (fieldValue && field.maxLength === 0) {
 ### SchoolStructureRule - Estrutura por Escola
 
 ```typescript
-// Escola ATIVA (situação = 1) → deve ter registros 00, 10, 20, 30, 40
-// Escola PARALISADA/EXTINTA (situação = 2,3) → deve ter apenas 00, 30, 40
+// ESCOLA ATIVA (situação = 1):
+// - SEMPRE obrigatórios: 00, 10, 20, 30, 40
+// - CONDICIONALMENTE obrigatórios: 50 e 60 (SE existem turmas)
 
 if (situacao === '1') {
+  // Validação 1: Registros básicos obrigatórios
   const missingRecords = [];
   if (!school.hasRecord00) missingRecords.push('00');
   if (!school.hasRecord10) missingRecords.push('10');
@@ -364,11 +366,31 @@ if (situacao === '1') {
 
   if (missingRecords.length > 0) {
     errors.push({
-      errorMessage: `Escolas em atividade devem ter registros: ${missingRecords.join(', ')}`,
+      errorMessage: `Escolas em atividade devem ter registros obrigatórios: ${missingRecords.join(', ')}. Registros 50 e 60 são obrigatórios apenas se houver turmas.`,
     });
   }
+
+  // Validação 2: SE há turmas, DEVE haver profissionais e alunos
+  if (school.hasRecord20) {
+    for (const classCode of school.allClasses) {
+      if (!school.classesWithStudents.has(classCode)) {
+        errors.push({
+          errorMessage: 'Turma sem alunos vinculados (registro 60)',
+        });
+      }
+      if (!school.classesWithProfessionals.has(classCode)) {
+        errors.push({
+          errorMessage: 'Turma sem profissionais vinculados (registro 50)',
+        });
+      }
+    }
+  }
 }
+
+// ESCOLA PARALISADA/EXTINTA (situação = 2,3) → apenas 00, 30, 40
 ```
+
+````
 
 ### Outras Validações Estruturais
 
@@ -409,7 +431,7 @@ enum ValidationSeverity {
   WARNING = 'warning', // Permite envio com ressalva
   INFO = 'info', // Informativo apenas
 }
-```
+````
 
 ### Categorias de Erro
 
