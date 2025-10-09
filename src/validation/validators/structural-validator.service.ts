@@ -15,8 +15,11 @@ export class StructuralValidatorService {
   /**
    * Valida a estrutura geral do arquivo
    */
-  validateStructure(records: string[]): ValidationError[] {
-    return this.structuralRulesManager.validateStructure(records);
+  validateStructure(
+    records: string[],
+    fileContent?: string,
+  ): ValidationError[] {
+    return this.structuralRulesManager.validateStructure(records, fileContent);
   }
 
   /**

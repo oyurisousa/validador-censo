@@ -76,7 +76,10 @@ export class ValidationEngineService {
     errors.push(...fileValidationErrors);
 
     // Validações estruturais gerais
-    const structuralErrors = this.structuralValidator.validateStructure(lines);
+    const structuralErrors = this.structuralValidator.validateStructure(
+      lines,
+      content,
+    );
     errors.push(...structuralErrors);
 
     // Validação de codificação
@@ -104,7 +107,7 @@ export class ValidationEngineService {
         fileName,
         fileSize: content.length,
         totalLines: lines.length,
-        encoding: 'UTF-8',
+        encoding: 'ISO-8859-1',
         uploadDate: new Date(),
       };
 
@@ -137,7 +140,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: new TextEncoder().encode(content).length,
       totalLines: lines.length,
-      encoding: 'utf-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
@@ -250,7 +253,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: new TextEncoder().encode(content).length,
       totalLines: records.length,
-      encoding: 'utf-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
@@ -581,7 +584,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: records.join('\n').length,
       totalLines: records.length,
-      encoding: 'UTF-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
