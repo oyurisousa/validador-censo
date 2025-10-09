@@ -33,15 +33,20 @@ export class ValidationLoggingInterceptor implements NestInterceptor {
               `${warnings?.length || 0} avisos - ${responseTime}ms`,
           );
 
-          if (errors && errors.length > 0) {
-            this.logger.warn(`Erros encontrados: ${errors.length}`);
-            errors.slice(0, 5).forEach((error: any, index: number) => {
-              this.logger.warn(
+          // Log detalhado apenas em desenvolvimento ou quando solicitado
+          if (
+            process.env.NODE_ENV === 'development' &&
+            errors &&
+            errors.length > 0
+          ) {
+            this.logger.debug(`Erros encontrados: ${errors.length}`);
+            errors.slice(0, 3).forEach((error: any, index: number) => {
+              this.logger.debug(
                 `  ${index + 1}. Linha ${error.lineNumber} - ${error.fieldName}: ${error.errorMessage}`,
               );
             });
-            if (errors.length > 5) {
-              this.logger.warn(`  ... e mais ${errors.length - 5} erros`);
+            if (errors.length > 3) {
+              this.logger.debug(`  ... e mais ${errors.length - 3} erros`);
             }
           }
         }

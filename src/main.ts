@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
@@ -65,8 +65,9 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Aplicação rodando em: http://localhost:${port}`);
-  console.log(`📚 Documentação Swagger: http://localhost:${port}/api/docs`);
+  const logger = new Logger('Bootstrap');
+  logger.log(`🚀 Aplicação rodando em: http://localhost:${port}`);
+  logger.log(`📚 Documentação Swagger: http://localhost:${port}/api/docs`);
 }
 
 void bootstrap();
