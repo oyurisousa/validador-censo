@@ -709,6 +709,151 @@ export class StudentEnrollmentRule extends BaseRecordRule {
     };
   }
 
+  /**
+   * Override validate method to include intra-record business rules
+   */
+  validate(parts: string[], lineNumber: number): ValidationError[] {
+    const fieldErrors = super.validate(parts, lineNumber);
+
+    // Add intra-record conditional validations
+    const businessErrors: ValidationError[] = [];
+
+    // Validate transport fields when public transport = 1
+    // This validation doesn't require context - it's purely intra-record
+    this.validateTransportIntraRecord(parts, lineNumber, businessErrors);
+
+    return [...fieldErrors, ...businessErrors];
+  }
+
+  /**
+   * Validates transport-related fields within the same record (intra-record validation)
+   * This checks if vehicle fields (23-32) are filled when public transport = 1
+   */
+  private validateTransportIntraRecord(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+  ): void {
+    const publicTransport = parts[20] || ''; // Campo 21
+
+    // If public transport is "1" (Yes), then vehicle fields become required
+    if (publicTransport === '1') {
+      const vehicleFields = [
+        {
+          index: 21,
+          name: 'transport_authority',
+          label: 'Poder público responsável pelo transporte',
+        },
+        {
+          index: 22,
+          name: 'vehicle_road_federal',
+          label: 'Rodoviário - Federal',
+        },
+        {
+          index: 23,
+          name: 'vehicle_road_state',
+          label: 'Rodoviário - Estadual',
+        },
+        {
+          index: 24,
+          name: 'vehicle_road_municipal',
+          label: 'Rodoviário - Municipal',
+        },
+        {
+          index: 25,
+          name: 'vehicle_rail_metro',
+          label: 'Ferroviário - Metrô',
+        },
+        {
+          index: 26,
+          name: 'vehicle_rail_train',
+          label: 'Ferroviário - Trem',
+        },
+        {
+          index: 27,
+          name: 'vehicle_water',
+          label: 'Aquaviário',
+        },
+        {
+          index: 28,
+          name: 'vehicle_bike',
+          label: 'Bicicleta',
+        },
+        {
+          index: 29,
+          name: 'vehicle_animal',
+          label: 'Tração animal',
+        },
+        {
+          index: 30,
+          name: 'vehicle_walking',
+          label: 'A pé',
+        },
+        {
+          index: 31,
+          name: 'vehicle_other',
+          label: 'Outros',
+        },
+      ];
+
+      // Check if at least one vehicle field is filled
+      const hasVehicleSelected = vehicleFields.some((field) => {
+        const value = parts[field.index] || '';
+        return value.trim() === '1';
+      });
+
+      if (!hasVehicleSelected) {
+        // If no vehicle is selected, mark transport authority as required
+        const transportAuthority = parts[21] || '';
+        if (!transportAuthority || transportAuthority.trim() === '') {
+          errors.push(
+            this.createError(
+              lineNumber,
+              'transport_authority',
+              'Poder público responsável pelo transporte',
+              21,
+              transportAuthority,
+              'required_when_transport',
+              'Campo obrigatório quando "Utiliza transporte escolar público" = 1.',
+              ValidationSeverity.ERROR,
+            ),
+          );
+        }
+
+        // Also create an error suggesting at least one vehicle type should be selected
+        errors.push(
+          this.createError(
+            lineNumber,
+            'vehicle_selection',
+            'Tipo de veículo utilizado no transporte escolar',
+            22,
+            '',
+            'at_least_one_vehicle_required',
+            'Quando "Utiliza transporte escolar público" = 1, pelo menos um tipo de veículo deve ser selecionado (campos 23-32).',
+            ValidationSeverity.ERROR,
+          ),
+        );
+      } else {
+        // If vehicle is selected, transport authority becomes required
+        const transportAuthority = parts[21] || '';
+        if (!transportAuthority || transportAuthority.trim() === '') {
+          errors.push(
+            this.createError(
+              lineNumber,
+              'transport_authority',
+              'Poder público responsável pelo transporte',
+              21,
+              transportAuthority,
+              'required_when_transport',
+              'Campo obrigatório quando "Utiliza transporte escolar público" = 1.',
+              ValidationSeverity.ERROR,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   validateWithContext(
     parts: string[],
     schoolContext?: StudentEnrollmentSchoolContext,
@@ -850,7 +995,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           7,
           multiClass,
           'required_when_stage',
-          'O campo não foi preenchido quando deveria ser preenchido.',
+          `O campo é obrigatório para a etapa de ensino ${stage} (etapas que exigem: 3, 22, 23, 72, 56, 64).`,
           ValidationSeverity.ERROR,
         ),
       );
@@ -865,7 +1010,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           7,
           multiClass,
           'should_not_be_filled',
-          'O campo foi preenchido quando deveria não ser preenchido.',
+          `O campo não pode ser preenchido para a etapa de ensino ${stage || 'não informada'}. Só é obrigatório para etapas: 3, 22, 23, 72, 56, 64.`,
           ValidationSeverity.ERROR,
         ),
       );
@@ -989,7 +1134,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
               8 + index,
               field,
               'required_when_aee',
-              'O campo não foi preenchido quando deveria ser preenchido.',
+              'O campo é obrigatório quando a turma oferece Atendimento Educacional Especializado (campo 16 do registro 20 = 1-Sim).',
               ValidationSeverity.ERROR,
             ),
           );
@@ -1034,7 +1179,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
               8 + index,
               field,
               'should_not_be_filled',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido quando a turma não oferece Atendimento Educacional Especializado (campo 16 do registro 20 deve ser 1-Sim).',
               ValidationSeverity.ERROR,
             ),
           );
@@ -1068,7 +1213,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           19,
           schoolingSpace,
           'required_when_conditions',
-          'O campo não foi preenchido quando deveria ser preenchido.',
+          'O campo é obrigatório quando a turma é curricular (campo 14=1), mediação presencial (campo 6=1) e local não diferenciado ou sala anexa (campo 23=0 ou 1).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -1083,8 +1228,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Escolarização em espaço diferente da escola',
             19,
             schoolingSpace,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_non_curricular',
+            'O campo não pode ser preenchido quando a turma não é curricular (campo 14 do registro 20 deve ser 1-Sim).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1096,8 +1241,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Escolarização em espaço diferente da escola',
             19,
             schoolingSpace,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_non_presencial',
+            'O campo não pode ser preenchido quando a mediação não é presencial (campo 6 do registro 20 deve ser 1-Presencial).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1109,8 +1254,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Escolarização em espaço diferente da escola',
             19,
             schoolingSpace,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_invalid_location',
+            'O campo não pode ser preenchido quando o local de funcionamento não é válido (campo 23 do registro 20 deve ser 0-Não diferenciado ou 1-Sala anexa).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1151,7 +1296,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           20,
           publicTransport,
           'required_when_conditions',
-          'O campo não foi preenchido quando deveria ser preenchido.',
+          'O campo é obrigatório quando a mediação é presencial ou semipresencial, turma é curricular e aluno reside no Brasil.',
           ValidationSeverity.ERROR,
         ),
       );
@@ -1170,8 +1315,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Utiliza transporte escolar público',
             20,
             publicTransport,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_mediation',
+            'O campo não pode ser preenchido quando a mediação não é presencial ou semipresencial (campo 6 do registro 20 deve ser 1-Presencial ou 2-Semipresencial).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1183,8 +1328,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Utiliza transporte escolar público',
             20,
             publicTransport,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_curricular',
+            'O campo não pode ser preenchido quando a turma não é curricular (campo 14 do registro 20 deve ser 1-Sim).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1196,8 +1341,8 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'Utiliza transporte escolar público',
             20,
             publicTransport,
-            'should_not_be_filled',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'should_not_be_filled_foreign',
+            'O campo não pode ser preenchido quando o aluno não reside no Brasil (campo 51 do registro 30 deve ser 76-Brasil).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -1219,7 +1364,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           21,
           transportAuthority,
           'required_when_transport',
-          'O campo não foi preenchido quando deveria ser preenchido.',
+          'O campo é obrigatório quando o aluno utiliza transporte público (campo 20 = 1-Sim).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -1238,7 +1383,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
           21,
           transportAuthority,
           'should_not_be_filled',
-          'O campo foi preenchido quando deveria não ser preenchido.',
+          'O campo não pode ser preenchido quando o aluno não utiliza transporte público (campo 20 deve ser 1-Sim).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -1281,7 +1426,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
               22 + index,
               field,
               'required_when_transport',
-              'O campo não foi preenchido quando deveria ser preenchido.',
+              'O campo é obrigatório quando o aluno utiliza transporte público (campo 20 = 1-Sim). Pelo menos um tipo de veículo deve ser informado.',
               ValidationSeverity.ERROR,
             ),
           );
@@ -1378,7 +1523,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
               22 + index,
               field,
               'should_not_be_filled',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido quando o aluno não utiliza transporte público (campo 20 deve ser 1-Sim).',
               ValidationSeverity.ERROR,
             ),
           );

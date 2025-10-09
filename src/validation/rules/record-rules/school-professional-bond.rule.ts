@@ -325,7 +325,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
           5,
           parts[5],
           'should_not_be_filled',
-          'O campo foi preenchido quando deveria não ser preenchido.',
+          'O campo não deve ser preenchido (reservado para uso do INEP).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -648,7 +648,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
             7,
             functionalStatus,
             'functional_status_required',
-            'O campo não foi preenchido quando deveria ser preenchido.',
+            'O campo é obrigatório para professores (função 1, 5 ou 6) em escolas públicas (dependência administrativa 1, 2 ou 3).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -666,7 +666,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
           7,
           functionalStatus,
           'functional_status_not_allowed',
-          'O campo foi preenchido quando deveria não ser preenchido.',
+          'O campo não pode ser preenchido para funções que não são de professor (função deve ser 1, 5 ou 6).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -684,7 +684,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
           7,
           functionalStatus,
           'functional_status_private_school',
-          'O campo foi preenchido quando deveria não ser preenchido.',
+          'O campo não pode ser preenchido para professores em escolas privadas (dependência administrativa deve ser 1, 2 ou 3 para escolas públicas).',
           ValidationSeverity.ERROR,
         ),
       );
@@ -717,7 +717,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
               8 + index,
               area,
               'knowledge_area_not_allowed',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido para funções que não são de professor (função deve ser 1, 5 ou 6).',
               ValidationSeverity.ERROR,
             ),
           );
@@ -734,7 +734,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
               8 + index,
               area,
               'knowledge_area_invalid_stage',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido para etapas de educação infantil (etapas 1, 2 ou 3). Só é válido para etapas superiores.',
               ValidationSeverity.ERROR,
             ),
           );
@@ -773,7 +773,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
             8,
             firstArea || '',
             'first_knowledge_area_required',
-            'O campo não foi preenchido quando deveria ser preenchido.',
+            'O campo é obrigatório para professores (função 1, 5 ou 6) em turmas com etapas diferentes de 1, 2 ou 3, quando não há áreas de itinerário formativo preenchidas.',
             ValidationSeverity.ERROR,
           ),
         );
@@ -813,7 +813,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
               33 + index,
               area,
               'formative_area_not_allowed',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido para funções que não são de professor (função deve ser 1 ou 5).',
               ValidationSeverity.ERROR,
             ),
           );
@@ -829,7 +829,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
               33 + index,
               area,
               'formative_area_no_itinerary',
-              'O campo foi preenchido quando deveria não ser preenchido.',
+              'O campo não pode ser preenchido quando a turma não possui itinerário formativo (campo 35 do registro 20 deve ser 1-Sim).',
               ValidationSeverity.ERROR,
             ),
           );
@@ -844,7 +844,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
             33 + index,
             area || '',
             'formative_area_required',
-            'O campo não foi preenchido quando deveria ser preenchido.',
+            'O campo é obrigatório para professores (função 1 ou 5) em turmas com itinerário formativo (campo 35 do registro 20 = 1-Sim).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -876,7 +876,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
             37,
             professionalItinerary,
             'professional_itinerary_not_allowed',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'O campo não pode ser preenchido para funções que não são de professor (função deve ser 1, 5 ou 6).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -892,7 +892,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
             37,
             professionalItinerary,
             'professional_itinerary_no_class_support',
-            'O campo foi preenchido quando deveria não ser preenchido.',
+            'O campo não pode ser preenchido quando a turma não possui itinerário profissional (campo 36 do registro 20 deve ser 1-Sim).',
             ValidationSeverity.ERROR,
           ),
         );
@@ -907,7 +907,7 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
           37,
           professionalItinerary || '',
           'professional_itinerary_required',
-          'O campo não foi preenchido quando deveria ser preenchido.',
+          'O campo é obrigatório para professores (função 1, 5 ou 6) em turmas com itinerário profissional (campo 36 do registro 20 = 1-Sim).',
           ValidationSeverity.ERROR,
         ),
       );

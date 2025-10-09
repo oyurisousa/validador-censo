@@ -1857,6 +1857,115 @@ export class PhysicalPersonsRule extends BaseRecordRule {
   }
 
   /**
+   * Validates business rules with context from other records
+   * This method should be called when context from registro 40, 50, 60 is available
+   */
+  validateWithContext(
+    parts: string[],
+    lineNumber: number,
+    schoolContext?: {
+      codigoInep: string;
+      managerBonds: string[]; // códigos de pessoas com vínculo gestor (registro 40)
+      professionalBonds: string[]; // códigos de pessoas com vínculo profissional (registro 50)
+      studentEnrollments: string[]; // códigos de pessoas com matrícula (registro 60)
+      existingPersonCodes: string[]; // códigos de pessoas já processadas nesta escola
+    },
+  ): ValidationError[] {
+    const errors: ValidationError[] = [];
+
+    // Validações básicas de campos
+    const fieldErrors = super.validate(parts, lineNumber);
+    errors.push(...fieldErrors);
+
+    // Validações de regras de negócio
+    const businessErrors = this.validateBusinessRules(parts, lineNumber);
+    errors.push(...businessErrors);
+
+    // Validações que dependem de contexto
+    if (schoolContext) {
+      // Regra 3: A pessoa física deve ter vínculo (40, 50 ou 60)
+      this.validatePersonBonds(parts, lineNumber, errors, schoolContext);
+
+      // Regra 4: A pessoa física não pode aparecer duas vezes na mesma escola
+      this.validatePersonDuplication(parts, lineNumber, errors, schoolContext);
+    }
+
+    return errors;
+  }
+
+  private validatePersonBonds(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+    schoolContext: {
+      codigoInep: string;
+      managerBonds: string[];
+      professionalBonds: string[];
+      studentEnrollments: string[];
+      existingPersonCodes: string[];
+    },
+  ): void {
+    const codigoPessoa = parts[2] || '';
+
+    if (!codigoPessoa) return; // Se não tem código, já vai dar erro na validação de campo obrigatório
+
+    // Verificar se a pessoa tem pelo menos um vínculo (40, 50 ou 60)
+    const hasManagerBond = schoolContext.managerBonds.includes(codigoPessoa);
+    const hasProfessionalBond =
+      schoolContext.professionalBonds.includes(codigoPessoa);
+    const hasStudentEnrollment =
+      schoolContext.studentEnrollments.includes(codigoPessoa);
+
+    if (!hasManagerBond && !hasProfessionalBond && !hasStudentEnrollment) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'person_without_bond',
+          'A pessoa física deve ter vínculo de gestor escolar (registro 40), profissional escolar em sala de aula (registro 50) ou aluno(a) (registro 60)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+  }
+
+  private validatePersonDuplication(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+    schoolContext: {
+      codigoInep: string;
+      managerBonds: string[];
+      professionalBonds: string[];
+      studentEnrollments: string[];
+      existingPersonCodes?: string[]; // códigos de pessoas já processadas nesta escola
+    },
+  ): void {
+    const codigoPessoa = parts[2] || '';
+
+    if (!codigoPessoa) return;
+
+    // Verificar se já existe uma pessoa com o mesmo código nesta escola
+    if (schoolContext.existingPersonCodes?.includes(codigoPessoa)) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'person_duplicate',
+          'A pessoa física não pode aparecer duas vezes na mesma escola (código duplicado)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+  }
+
+  /**
    * Override validate method to include business rules
    */
   validate(parts: string[], lineNumber: number): ValidationError[] {
