@@ -42,6 +42,8 @@ interface ClassContext {
   atividadeComplementar?: boolean; // campo 19
   itinerarioFormativo?: boolean; // campo 35
   itinerarioProfissional?: boolean; // campo 36
+  // ADDED: store class-level differentiated location (campo 23)
+  differentiatedLocation?: number; // campo 23: local de funcionamento (0,1,...)
   areasConhecimento?: { [key: string]: boolean }; // campos 43-69
 }
 
@@ -325,6 +327,11 @@ export class ValidationEngineService {
           atendimentoEducacionalEspecializado: parts[15] === '1', // Campo 16: AEE (0-Não, 1-Sim)
           itinerarioFormativo: parts[34] === '1',
           itinerarioProfissional: parts[35] === '1',
+          // NEW: capture campo 23 (index 22) - local de funcionamento / local diferenciado
+          differentiatedLocation:
+            parts[22] !== undefined && parts[22] !== ''
+              ? parseInt(parts[22])
+              : undefined,
           // Areas de conhecimento (campos 43-69) - simplificado
           areasConhecimento: {},
         });
@@ -479,8 +486,12 @@ export class ValidationEngineService {
                   stage: c.etapa,
                   specializedEducationalService:
                     c.atendimentoEducacionalEspecializado || false,
+                  // Prefer class-level differentiatedLocation (campo 23) when available,
+                  // otherwise fall back to school-level localizacaoDiferenciada or default 7.
                   differentiatedLocation:
-                    schoolContext?.localizacaoDiferenciada || 7, // 7 = Não diferenciada (padrão)
+                    c.differentiatedLocation !== undefined
+                      ? c.differentiatedLocation
+                      : schoolContext?.localizacaoDiferenciada || 7,
                 })),
                 persons: Array.from(personContexts.values()).map((p) => ({
                   personCode: p.codigoPessoa,
@@ -507,8 +518,11 @@ export class ValidationEngineService {
                 stage: classContext.etapa,
                 specializedEducationalService:
                   classContext.atendimentoEducacionalEspecializado || false,
+                // Use class-level differentiatedLocation when available, else school-level or default 7
                 differentiatedLocation:
-                  schoolContext?.localizacaoDiferenciada || 7, // 7 = Não diferenciada (padrão)
+                  classContext.differentiatedLocation !== undefined
+                    ? classContext.differentiatedLocation
+                    : schoolContext?.localizacaoDiferenciada || 7, // 7 = Não diferenciada (padrão)
               }
             : undefined;
 
