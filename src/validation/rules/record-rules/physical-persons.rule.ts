@@ -6,6 +6,17 @@ import {
 } from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
 
+/**
+ * Validation rules for Physical Persons (Record 30)
+ *
+ * IMPORTANT - CPF Validation Rules (Fixed):
+ * 1. Required for school managers (registro 40) - always
+ * 2. Required for classroom professionals (registro 50) - only if nationality is Brazilian (1 or 2)
+ * 3. Required for students (registro 60) - only if enrolled in stages 69, 70, 72, 71, 67, 73, 74
+ *
+ * Previous implementation incorrectly required CPF for all Brazilian nationals regardless of their role.
+ * The correct business rule is that CPF requirements depend on the person's role/bond type AND nationality/stage.
+ */
 @Injectable()
 export class PhysicalPersonsRule extends BaseRecordRule {
   protected readonly recordType = RecordTypeEnum.PHYSICAL_PERSONS;
@@ -1299,28 +1310,25 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     // Regra 3: Validação de Data de Nascimento
     this.validateBirthDate(parts, lineNumber, errors);
 
-    // Regra 4: Validação de CPF vs Nacionalidade
-    this.validateCpfNationality(parts, lineNumber, errors);
-
-    // Regra 5: Validação de Povo Indígena
+    // Regra 4: Validação de Povo Indígena
     this.validateIndigenousPeople(parts, lineNumber, errors);
 
-    // Regra 6: Validação de Nacionalidade vs País
-    this.validateNationalityCountry(parts, lineNumber, errors);
+    // Regra 5: Validação de Nacionalidade vs País
+    this.validateCpfNationality(parts, lineNumber, errors);
 
-    // Regra 7: Validação de Município de Nascimento
+    // Regra 6: Validação de Município de Nascimento
     this.validateBirthMunicipality(parts, lineNumber, errors);
 
-    // Regra 8: Validação de Deficiências
+    // Regra 7: Validação de Deficiências
     this.validateDisabilities(parts, lineNumber, errors);
 
-    // Regra 9: Validação de Transtornos de Aprendizagem
+    // Regra 8: Validação de Transtornos de Aprendizagem
     this.validateLearningDisorders(parts, lineNumber, errors);
 
-    // Regra 10: Validação de Recursos Educacionais
+    // Regra 9: Validação de Recursos Educacionais
     this.validateEducationalResources(parts, lineNumber, errors);
 
-    // Regra 11: Validação de Residência
+    // Regra 10: Validação de Residência
     this.validateResidence(parts, lineNumber, errors);
 
     return errors;
@@ -1494,56 +1502,6 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     errors: ValidationError[],
   ): void {
     const nacionalidade = parts[13] || '';
-    const cpf = parts[4] || '';
-
-    // CPF obrigatório para brasileiros (nacionalidade 1 ou 2)
-    if (['1', '2'].includes(nacionalidade) && !cpf) {
-      errors.push(
-        this.createError(
-          lineNumber,
-          'cpf',
-          'CPF',
-          4,
-          `nacionalidade:${nacionalidade}|cpf:${cpf}`,
-          'cpf_required_brazilian',
-          'CPF é obrigatório para pessoas com nacionalidade brasileira',
-          ValidationSeverity.ERROR,
-        ),
-      );
-    }
-  }
-
-  private validateIndigenousPeople(
-    parts: string[],
-    lineNumber: number,
-    errors: ValidationError[],
-  ): void {
-    const corRaca = parts[11] || '';
-    const povoIndigena = parts[12] || '';
-
-    // Povo indígena só pode ser preenchido se cor/raça = 5 (indígena)
-    if (povoIndigena && corRaca !== '5') {
-      errors.push(
-        this.createError(
-          lineNumber,
-          'povo_indigena',
-          'Código do povo/etnia indígena',
-          12,
-          povoIndigena,
-          'indigenous_people_race_required',
-          'Povo indígena só pode ser preenchido quando cor/raça = 5 (Indígena)',
-          ValidationSeverity.ERROR,
-        ),
-      );
-    }
-  }
-
-  private validateNationalityCountry(
-    parts: string[],
-    lineNumber: number,
-    errors: ValidationError[],
-  ): void {
-    const nacionalidade = parts[13] || '';
     const paisNacionalidade = parts[14] || '';
 
     // País deve ser 76 (Brasil) para nacionalidade 1 ou 2
@@ -1573,6 +1531,31 @@ export class PhysicalPersonsRule extends BaseRecordRule {
           paisNacionalidade,
           'country_foreign_required',
           'País não pode ser 76 (Brasil) para nacionalidade estrangeira',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+  }
+
+  private validateIndigenousPeople(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+  ): void {
+    const corRaca = parts[11] || '';
+    const povoIndigena = parts[12] || '';
+
+    // Povo indígena só pode ser preenchido se cor/raça = 5 (indígena)
+    if (povoIndigena && corRaca !== '5') {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'povo_indigena',
+          'Código do povo/etnia indígena',
+          12,
+          povoIndigena,
+          'indigenous_people_race_required',
+          'Povo indígena só pode ser preenchido quando cor/raça = 5 (Indígena)',
           ValidationSeverity.ERROR,
         ),
       );
@@ -1857,15 +1840,214 @@ export class PhysicalPersonsRule extends BaseRecordRule {
   }
 
   /**
+   * Validates business rules with context from other records
+   * This method should be called when context from registro 40, 50, 60 is available
+   */
+  validateWithContext(
+    parts: string[],
+    lineNumber: number,
+    schoolContext?: {
+      codigoInep: string;
+      managerBonds: string[]; // códigos de pessoas com vínculo gestor (registro 40)
+      professionalBonds: string[]; // códigos de pessoas com vínculo profissional (registro 50)
+      studentEnrollments: string[]; // códigos de pessoas com matrícula (registro 60)
+      studentStages: Map<string, string[]>; // código da pessoa -> array das etapas de ensino (registro 60)
+      existingPersonCodes: string[]; // códigos de pessoas já processadas nesta escola
+    },
+  ): ValidationError[] {
+    const errors: ValidationError[] = [];
+
+    // Validações básicas de campos e regras de negócio (chama o método validate padrão)
+    const basicErrors = this.validate(parts, lineNumber);
+    errors.push(...basicErrors);
+
+    // Validações que dependem de contexto
+    if (schoolContext) {
+      // Regra CPF: Validar obrigatoriedade do CPF baseada em vínculos
+      this.validateCpfRequirements(parts, lineNumber, errors, schoolContext);
+
+      // Regra 3: A pessoa física deve ter vínculo (40, 50 ou 60)
+      this.validatePersonBonds(parts, lineNumber, errors, schoolContext);
+
+      // Regra 4: A pessoa física não pode aparecer duas vezes na mesma escola
+      this.validatePersonDuplication(parts, lineNumber, errors, schoolContext);
+    }
+
+    return errors;
+  }
+
+  /**
+   * Validates CPF requirements based on person's bonds and nationality
+   * Regras do INEP para CPF:
+   * 1. Obrigatório para gestores escolares (registro 40)
+   * 2. Obrigatório para profissionais em sala de aula (registro 50) com nacionalidade brasileira (1 ou 2)
+   * 3. Obrigatório para alunos nas etapas 69, 70, 72, 71, 67, 73 ou 74
+   */
+  private validateCpfRequirements(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+    schoolContext: {
+      codigoInep: string;
+      managerBonds: string[];
+      professionalBonds: string[];
+      studentEnrollments: string[];
+      studentStages: Map<string, string[]>;
+      existingPersonCodes: string[];
+    },
+  ): void {
+    const codigoPessoa = parts[2] || '';
+    const cpf = parts[4] || '';
+    const nacionalidade = parts[13] || '';
+
+    if (!codigoPessoa) return;
+
+    const hasManagerBond = schoolContext.managerBonds.includes(codigoPessoa);
+    const hasProfessionalBond =
+      schoolContext.professionalBonds.includes(codigoPessoa);
+    const hasStudentEnrollment =
+      schoolContext.studentEnrollments.includes(codigoPessoa);
+
+    // Regra 1: CPF obrigatório para gestores escolares (registro 40)
+    if (hasManagerBond && !cpf) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'cpf',
+          'CPF',
+          4,
+          `vinculo:gestor|cpf:${cpf}`,
+          'cpf_required_manager',
+          'CPF é obrigatório para pessoas com vínculo de gestor escolar (registro 40)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 2: CPF obrigatório para profissionais brasileiros (registro 50)
+    if (hasProfessionalBond && ['1', '2'].includes(nacionalidade) && !cpf) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'cpf',
+          'CPF',
+          4,
+          `vinculo:profissional|nacionalidade:${nacionalidade}|cpf:${cpf}`,
+          'cpf_required_professional_brazilian',
+          'CPF é obrigatório para profissionais escolares com nacionalidade brasileira (registro 50)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 3: CPF obrigatório para alunos em etapas específicas (registro 60)
+    // Etapas que exigem CPF: 69, 70, 72, 71, 67, 73, 74
+    if (hasStudentEnrollment && !cpf) {
+      const studentStages = schoolContext.studentStages.get(codigoPessoa) || [];
+      const cpfRequiredStages = ['69', '70', '72', '71', '67', '73', '74'];
+
+      const hasStageRequiringCpf = studentStages.some((stage) =>
+        cpfRequiredStages.includes(stage),
+      );
+
+      if (hasStageRequiringCpf) {
+        const stagesRequiringCpf = studentStages.filter((stage) =>
+          cpfRequiredStages.includes(stage),
+        );
+
+        errors.push(
+          this.createError(
+            lineNumber,
+            'cpf',
+            'CPF',
+            4,
+            `vinculo:aluno|etapas:${stagesRequiringCpf.join(',')}|cpf:${cpf}`,
+            'cpf_required_student_stages',
+            `CPF é obrigatório para alunos nas etapas ${stagesRequiringCpf.join(', ')} (registro 60)`,
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+  }
+
+  private validatePersonBonds(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+    schoolContext: {
+      codigoInep: string;
+      managerBonds: string[];
+      professionalBonds: string[];
+      studentEnrollments: string[];
+      studentStages: Map<string, string[]>;
+      existingPersonCodes: string[];
+    },
+  ): void {
+    const codigoPessoa = parts[2] || '';
+
+    if (!codigoPessoa) return; // Se não tem código, já vai dar erro na validação de campo obrigatório
+
+    // Verificar se a pessoa tem pelo menos um vínculo (40, 50 ou 60)
+    const hasManagerBond = schoolContext.managerBonds.includes(codigoPessoa);
+    const hasProfessionalBond =
+      schoolContext.professionalBonds.includes(codigoPessoa);
+    const hasStudentEnrollment =
+      schoolContext.studentEnrollments.includes(codigoPessoa);
+
+    if (!hasManagerBond && !hasProfessionalBond && !hasStudentEnrollment) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'person_without_bond',
+          'A pessoa física deve ter vínculo de gestor escolar (registro 40), profissional escolar em sala de aula (registro 50) ou aluno(a) (registro 60)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+  }
+
+  private validatePersonDuplication(
+    parts: string[],
+    lineNumber: number,
+    errors: ValidationError[],
+    schoolContext: {
+      codigoInep: string;
+      managerBonds: string[];
+      professionalBonds: string[];
+      studentEnrollments: string[];
+      studentStages: Map<string, string[]>;
+      existingPersonCodes?: string[]; // códigos de pessoas já processadas nesta escola
+    },
+  ): void {
+    const codigoPessoa = parts[2] || '';
+
+    if (!codigoPessoa) return;
+
+    // Verificar se já existe uma pessoa com o mesmo código nesta escola
+    if (schoolContext.existingPersonCodes?.includes(codigoPessoa)) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'codigo_pessoa_sistema',
+          'Código da pessoa física no sistema próprio',
+          2,
+          codigoPessoa,
+          'person_duplicate',
+          'A pessoa física não pode aparecer duas vezes na mesma escola (código duplicado)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+  }
+
+  /**
    * Override validate method to include business rules
    */
-  validate(parts: string[], lineNumber: number): ValidationError[] {
-    // First run the standard field validation
-    const fieldErrors = super.validate(parts, lineNumber);
-
-    // Then run the business rules validation
-    const businessErrors = this.validateBusinessRules(parts, lineNumber);
-
-    return [...fieldErrors, ...businessErrors];
-  }
+  // Note: BusinessRules validation is already handled by super.validate()
+  // No need to override validate() method since BaseRecordRule already calls validateBusinessRules()
 }

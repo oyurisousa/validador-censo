@@ -28,7 +28,18 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      // Prevenir console.log em produção
+      'no-console': ['warn', {
+        allow: ['error'] // Permite apenas console.error em emergências
+      }]
     },
+  },
+  {
+    // Regras específicas para arquivos de exemplo/teste
+    files: ['**/examples/**', '**/*.example.*', '**/*.test.*', '**/*.spec.*', 'test-*.js'],
+    rules: {
+      'no-console': 'off' // Permite console nos testes/exemplos
+    }
   },
 );

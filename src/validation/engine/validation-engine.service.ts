@@ -21,12 +21,14 @@ interface SchoolContext {
   codigoInep: string;
   situacaoFuncionamento: string;
   dependenciaAdministrativa: string;
+  localizacaoDiferenciada?: number; // Campo 20: Localização diferenciada
 }
 
 // Interface para contexto de pessoa (registro 30)
 interface PersonContext {
   codigoPessoa: string;
   identificacaoInep?: string;
+  paisResidencia?: number; // Campo 51: País de residência
   enrolledClasses?: string[]; // turmas onde a pessoa está matriculada como aluno
 }
 
@@ -36,6 +38,7 @@ interface ClassContext {
   mediacao?: number; // campo 6
   etapa?: number; // campo 26
   curricular?: boolean; // campo 14
+  atendimentoEducacionalEspecializado?: boolean; // campo 16 - AEE (0-Não, 1-Sim)
   atividadeComplementar?: boolean; // campo 19
   itinerarioFormativo?: boolean; // campo 35
   itinerarioProfissional?: boolean; // campo 36
@@ -73,7 +76,10 @@ export class ValidationEngineService {
     errors.push(...fileValidationErrors);
 
     // Validações estruturais gerais
-    const structuralErrors = this.structuralValidator.validateStructure(lines);
+    const structuralErrors = this.structuralValidator.validateStructure(
+      lines,
+      content,
+    );
     errors.push(...structuralErrors);
 
     // Validação de codificação
@@ -101,7 +107,7 @@ export class ValidationEngineService {
         fileName,
         fileSize: content.length,
         totalLines: lines.length,
-        encoding: 'UTF-8',
+        encoding: 'ISO-8859-1',
         uploadDate: new Date(),
       };
 
@@ -116,64 +122,17 @@ export class ValidationEngineService {
       };
     }
 
-    // Validação linha por linha
-    for (let i = 0; i < lines.length; i++) {
-      const lineNumber = i + 1;
-      const line = lines[i].trim();
+    // Usar validação com contexto para capturar regras condicionais
+    const contextResult = await this.validateRecordsWithContext(
+      lines,
+      fileName,
+      version,
+    );
 
-      if (line === '') continue;
-
-      try {
-        // Determinar tipo de registro
-        const recordType = this.extractRecordType(line);
-
-        if (!recordType) {
-          errors.push({
-            lineNumber,
-            recordType: 'UNKNOWN',
-            fieldName: 'record_type',
-            fieldPosition: 0,
-            fieldValue: line.substring(0, 10),
-            ruleName: 'record_type_identification',
-            errorMessage: 'Tipo de registro não identificado',
-            severity: ValidationSeverity.ERROR,
-          });
-          continue;
-        }
-
-        // Validar registro
-        const recordErrors = await this.recordValidator.validateRecord(
-          line,
-          recordType,
-          lineNumber,
-          version,
-        );
-
-        errors.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.ERROR,
-          ),
-        );
-        warnings.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.WARNING,
-          ),
-        );
-
-        processedRecords++;
-      } catch (error) {
-        errors.push({
-          lineNumber,
-          recordType: 'UNKNOWN',
-          fieldName: 'line_processing',
-          fieldPosition: -1,
-          fieldValue: line.substring(0, 50),
-          ruleName: 'line_processing_error',
-          errorMessage: `Erro ao processar linha: ${(error as Error).message}`,
-          severity: ValidationSeverity.ERROR,
-        });
-      }
-    }
+    // Combinar os erros das validações estruturais com os de contexto
+    errors.push(...contextResult.errors);
+    warnings.push(...contextResult.warnings);
+    processedRecords = contextResult.processedRecords;
 
     const processingTime = Date.now() - startTime;
 
@@ -181,7 +140,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: new TextEncoder().encode(content).length,
       totalLines: lines.length,
-      encoding: 'utf-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
@@ -262,16 +221,8 @@ export class ValidationEngineService {
           version,
         );
 
-        errors.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.ERROR,
-          ),
-        );
-        warnings.push(
-          ...recordErrors.filter(
-            (e) => e.severity === ValidationSeverity.WARNING,
-          ),
-        );
+        errors.push(...recordErrors.filter((e) => e.severity === 'error'));
+        warnings.push(...recordErrors.filter((e) => e.severity === 'warning'));
 
         processedRecords++;
       } catch (error) {
@@ -294,7 +245,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: new TextEncoder().encode(content).length,
       totalLines: records.length,
-      encoding: 'utf-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
@@ -353,10 +304,14 @@ export class ValidationEngineService {
 
       if (recordType === RecordTypeEnum.SCHOOL_IDENTIFICATION) {
         // Captura dados do registro 00
+        const localizacaoDiferenciada = parts[19] || ''; // Campo 20: Localização diferenciada
         schoolContext = {
           codigoInep: parts[1] || '',
           situacaoFuncionamento: parts[2] || '',
           dependenciaAdministrativa: parts[20] || '',
+          localizacaoDiferenciada: localizacaoDiferenciada
+            ? parseInt(localizacaoDiferenciada)
+            : undefined,
         };
       } else if (recordType === RecordTypeEnum.CLASSES) {
         // Captura dados do registro 20
@@ -367,6 +322,7 @@ export class ValidationEngineService {
           etapa: parts[25] ? parseInt(parts[25]) : undefined,
           curricular: parts[13] === '1',
           atividadeComplementar: parts[18] === '1',
+          atendimentoEducacionalEspecializado: parts[15] === '1', // Campo 16: AEE (0-Não, 1-Sim)
           itinerarioFormativo: parts[34] === '1',
           itinerarioProfissional: parts[35] === '1',
           // Areas de conhecimento (campos 43-69) - simplificado
@@ -376,9 +332,11 @@ export class ValidationEngineService {
         // Captura dados do registro 30
         const codigoPessoa = parts[2] || '';
         const identificacaoInep = parts[3] || '';
+        const paisResidencia = parts[50] || ''; // Campo 51: País de residência
         personContexts.set(codigoPessoa, {
           codigoPessoa,
           identificacaoInep: identificacaoInep || undefined,
+          paisResidencia: paisResidencia ? parseInt(paisResidencia) : undefined,
           enrolledClasses: [],
         });
       }
@@ -519,13 +477,15 @@ export class ValidationEngineService {
                   isRegular: c.curricular,
                   isComplementaryActivity: c.atividadeComplementar,
                   stage: c.etapa,
-                  specializedEducationalService: false, // TODO: implementar quando campo estiver disponível
-                  differentiatedLocation: 0, // TODO: implementar quando campo estiver disponível
+                  specializedEducationalService:
+                    c.atendimentoEducacionalEspecializado || false,
+                  differentiatedLocation:
+                    schoolContext?.localizacaoDiferenciada || 7, // 7 = Não diferenciada (padrão)
                 })),
                 persons: Array.from(personContexts.values()).map((p) => ({
                   personCode: p.codigoPessoa,
                   inepId: p.identificacaoInep,
-                  residenceCountry: 76, // TODO: implementar quando campo estiver disponível
+                  residenceCountry: p.paisResidencia || 76, // 76 = Brasil (padrão)
                 })),
               }
             : undefined;
@@ -534,7 +494,7 @@ export class ValidationEngineService {
             ? {
                 personCode: personContext.codigoPessoa,
                 inepId: personContext.identificacaoInep,
-                residenceCountry: 76, // TODO: implementar quando campo estiver disponível
+                residenceCountry: personContext.paisResidencia || 76, // 76 = Brasil (padrão)
               }
             : undefined;
 
@@ -545,8 +505,10 @@ export class ValidationEngineService {
                 isRegular: classContext.curricular,
                 isComplementaryActivity: classContext.atividadeComplementar,
                 stage: classContext.etapa,
-                specializedEducationalService: false, // TODO: implementar quando campo estiver disponível
-                differentiatedLocation: 0, // TODO: implementar quando campo estiver disponível
+                specializedEducationalService:
+                  classContext.atendimentoEducacionalEspecializado || false,
+                differentiatedLocation:
+                  schoolContext?.localizacaoDiferenciada || 7, // 7 = Não diferenciada (padrão)
               }
             : undefined;
 
@@ -564,8 +526,14 @@ export class ValidationEngineService {
           if (contextErrors.length === 0 && personContext) {
             // Aqui poderia adicionar lógica para rastrear matrículas de alunos se necessário
           }
-        } else {
-          // Validação normal para outros tipos
+        } else if (
+          recordType === RecordTypeEnum.SCHOOL_IDENTIFICATION ||
+          recordType === RecordTypeEnum.CLASSES ||
+          recordType === RecordTypeEnum.PHYSICAL_PERSONS ||
+          recordType === RecordTypeEnum.SCHOOL_CHARACTERIZATION ||
+          recordType === RecordTypeEnum.FILE_END
+        ) {
+          // Validação normal para registros que não precisam de contexto especial
           const recordErrors = await this.recordValidator.validateRecord(
             record,
             recordType,
@@ -614,7 +582,7 @@ export class ValidationEngineService {
       fileName,
       fileSize: records.join('\n').length,
       totalLines: records.length,
-      encoding: 'UTF-8',
+      encoding: 'ISO-8859-1',
       uploadDate: new Date(),
     };
 
@@ -711,14 +679,8 @@ export class ValidationEngineService {
       );
 
       // Separar erros e warnings
-      errors.push(
-        ...recordErrors.filter((e) => e.severity === ValidationSeverity.ERROR),
-      );
-      warnings.push(
-        ...recordErrors.filter(
-          (e) => e.severity === ValidationSeverity.WARNING,
-        ),
-      );
+      errors.push(...recordErrors.filter((e) => e.severity === 'error'));
+      warnings.push(...recordErrors.filter((e) => e.severity === 'warning'));
     } catch (error) {
       errors.push({
         lineNumber: 1,

@@ -23,21 +23,23 @@ export class ErrorLoggingInterceptor implements NestInterceptor {
           error.stack,
         );
 
-        // Log detalhado do erro
-        this.logger.error(`Detalhes do erro:`, {
-          message: error.message,
-          status: error.status || 500,
-          method,
-          url: originalUrl,
-          body: body ? JSON.stringify(body).substring(0, 500) : null,
-          file: file
-            ? {
-                originalname: file.originalname,
-                size: file.size,
-                mimetype: file.mimetype,
-              }
-            : null,
-        });
+        // Log detalhado apenas para erros de sistema (não de validação)
+        if (error.status !== 400 || process.env.NODE_ENV === 'development') {
+          this.logger.error(`Detalhes do erro:`, {
+            message: error.message,
+            status: error.status || 500,
+            method,
+            url: originalUrl,
+            body: body ? JSON.stringify(body).substring(0, 500) : null,
+            file: file
+              ? {
+                  originalname: file.originalname,
+                  size: file.size,
+                  mimetype: file.mimetype,
+                }
+              : null,
+          });
+        }
 
         return throwError(() => error);
       }),
