@@ -317,7 +317,7 @@ export class ValidationEngineService {
         };
       } else if (recordType === RecordTypeEnum.CLASSES) {
         // Captura dados do registro 20
-        const codigoTurma = parts[2] || '';
+        const codigoTurma = (parts[2] || '').trim();
         classContexts.set(codigoTurma, {
           codigoTurma,
           mediacao: parts[5] ? parseInt(parts[5]) : undefined,
@@ -397,7 +397,7 @@ export class ValidationEngineService {
         } else if (recordType === RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS) {
           // Validação especial para registro 50 com contexto
           const codigoPessoa = parts[2] || '';
-          const codigoTurma = parts[4] || '';
+          const codigoTurma = (parts[4] || '').trim();
           const personContext = personContexts.get(codigoPessoa);
           const classContext = classContexts.get(codigoTurma);
 

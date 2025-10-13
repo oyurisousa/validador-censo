@@ -231,80 +231,110 @@ export class SchoolProfessionalBondRule extends BaseRecordRule {
     }
 
     // Only do other cross-reference validations if we have all contexts
-    if (!schoolContext || !classContext || !personContext) {
-      return errors;
+    // Cross-reference validations: run each check when the required context is available.
+    // School-level checks
+    if (schoolContext) {
+      // Validate that the class code exists in the school's classes.
+      // This must run even when classContext is undefined so we can report
+      // 'class_not_found' for registro 50 entries that reference a non-existent turma (registro 20).
+      errors.push(
+        ...this.validateClassCodeWithContext(
+          fields[4],
+          schoolContext,
+          lineNumber,
+        ),
+      );
+      // Note: schoolCode itself was validated earlier outside this block.
     }
 
-    // Cross-reference validations that require all contexts
-    errors.push(
-      ...this.validatePersonCodeWithContext(
-        fields[2],
-        schoolContext,
-        personContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateInepIdWithContext(fields[3], personContext, lineNumber),
-    );
-    errors.push(
-      ...this.validateClassCodeWithContext(
-        fields[4],
-        schoolContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateFunctionWithContext(
-        fields[6],
-        classContext,
-        schoolContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateFunctionalStatusWithContext(
-        fields[7],
-        fields[6],
-        schoolContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateKnowledgeAreasWithContext(
-        fields.slice(8, 33),
-        fields[6],
-        classContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateFormativeItineraryAreasWithContext(
-        fields.slice(33, 37),
-        fields[6],
-        classContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateProfessionalItineraryWithContext(
-        fields[37],
-        fields[6],
-        classContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateStudentConflict(
-        fields[2],
-        fields[4],
-        personContext,
-        lineNumber,
-      ),
-    );
-    errors.push(
-      ...this.validateLibrasRequirements(fields[6], classContext, lineNumber),
-    );
+    // Person-related validations (require person context)
+    if (schoolContext && personContext) {
+      errors.push(
+        ...this.validatePersonCodeWithContext(
+          fields[2],
+          schoolContext,
+          personContext,
+          lineNumber,
+        ),
+      );
+    }
+
+    if (personContext) {
+      errors.push(
+        ...this.validateInepIdWithContext(fields[3], personContext, lineNumber),
+      );
+    }
+
+    // Class-related validations (require class or school/class depending on rule)
+    if (schoolContext && classContext) {
+      // class existence already validated above when schoolContext exists
+      errors.push(
+        ...this.validateFunctionWithContext(
+          fields[6],
+          classContext,
+          schoolContext,
+          lineNumber,
+        ),
+      );
+    }
+
+    // Functional status depends only on schoolContext (administrative dependency)
+    if (schoolContext) {
+      errors.push(
+        ...this.validateFunctionalStatusWithContext(
+          fields[7],
+          fields[6],
+          schoolContext,
+          lineNumber,
+        ),
+      );
+    }
+
+    // Knowledge/itinerary/professional validations depend on classContext
+    if (classContext) {
+      errors.push(
+        ...this.validateKnowledgeAreasWithContext(
+          fields.slice(8, 33),
+          fields[6],
+          classContext,
+          lineNumber,
+        ),
+      );
+
+      errors.push(
+        ...this.validateFormativeItineraryAreasWithContext(
+          fields.slice(33, 37),
+          fields[6],
+          classContext,
+          lineNumber,
+        ),
+      );
+
+      errors.push(
+        ...this.validateProfessionalItineraryWithContext(
+          fields[37],
+          fields[6],
+          classContext,
+          lineNumber,
+        ),
+      );
+
+      errors.push(
+        ...this.validateLibrasRequirements(fields[6], classContext, lineNumber),
+      );
+    }
+
+    // Student conflict validation requires personContext
+    if (personContext) {
+      errors.push(
+        ...this.validateStudentConflict(
+          fields[2],
+          fields[4],
+          personContext,
+          lineNumber,
+        ),
+      );
+    }
 
     return errors;
   }
