@@ -351,10 +351,12 @@ if (fieldValue && field.maxLength === 0) {
 ### SchoolStructureRule - Estrutura por Escola
 
 ```typescript
-// Escola ATIVA (situação = 1) → deve ter registros 00, 10, 20, 30, 40
-// Escola PARALISADA/EXTINTA (situação = 2,3) → deve ter apenas 00, 30, 40
+// ESCOLA ATIVA (situação = 1):
+// - SEMPRE obrigatórios: 00, 10, 20, 30, 40
+// - CONDICIONALMENTE obrigatórios: 50 e 60 (SE existem turmas)
 
 if (situacao === '1') {
+  // Validação 1: Registros básicos obrigatórios
   const missingRecords = [];
   if (!school.hasRecord00) missingRecords.push('00');
   if (!school.hasRecord10) missingRecords.push('10');
@@ -364,11 +366,31 @@ if (situacao === '1') {
 
   if (missingRecords.length > 0) {
     errors.push({
-      errorMessage: `Escolas em atividade devem ter registros: ${missingRecords.join(', ')}`,
+      errorMessage: `Escolas em atividade devem ter registros obrigatórios: ${missingRecords.join(', ')}. Registros 50 e 60 são obrigatórios apenas se houver turmas.`,
     });
   }
+
+  // Validação 2: SE há turmas, DEVE haver profissionais e alunos
+  if (school.hasRecord20) {
+    for (const classCode of school.allClasses) {
+      if (!school.classesWithStudents.has(classCode)) {
+        errors.push({
+          errorMessage: 'Turma sem alunos vinculados (registro 60)',
+        });
+      }
+      if (!school.classesWithProfessionals.has(classCode)) {
+        errors.push({
+          errorMessage: 'Turma sem profissionais vinculados (registro 50)',
+        });
+      }
+    }
+  }
 }
+
+// ESCOLA PARALISADA/EXTINTA (situação = 2,3) → apenas 00, 30, 40
 ```
+
+````
 
 ### Outras Validações Estruturais
 
@@ -380,17 +402,20 @@ if (situacao === '1') {
 #### 📝 Sobre a Codificação ISO-8859-1
 
 **Conforme especificação INEP:**
+
 > "Deve ser utilizado o padrão ISO-8859-1 de codificação de caracteres."
 
 **Características:**
+
 - ✅ Suporta caracteres de 0x00 a 0xFF (256 caracteres)
 - ✅ Inclui acentos portugueses: À, Á, Ã, Ç, É, Í, Ó, Ú, etc.
 - ❌ **NÃO usar UTF-8** (incompatível com validadores INEP)
 - ❌ Não deve ter BOM (Byte Order Mark)
 
 **Caracteres válidos nos campos:**
+
 - Letras: **A-Z** (apenas maiúsculas)
-- Números: **0-9** 
+- Números: **0-9**
 - Especiais: **espaço, hífen (-), barra (/), etc.**
 - ❌ Minúsculas (a-z) são convertidas automaticamente ou geram erro
 
@@ -406,7 +431,7 @@ enum ValidationSeverity {
   WARNING = 'warning', // Permite envio com ressalva
   INFO = 'info', // Informativo apenas
 }
-```
+````
 
 ### Categorias de Erro
 
@@ -603,11 +628,14 @@ validateWithContext(
 ### Debug e Logs
 
 ```typescript
+// ⚠️  NUNCA usar console.log em produção! Use Logger do NestJS:
+private readonly logger = new Logger('ValidationDebug');
+
 // Para debug durante desenvolvimento:
-console.log('Contexto escola:', schoolContext);
-console.log('Contexto pessoa:', personContext);
-console.log('Valor campo referência:', parts[refField.position]);
-console.log('Campo obrigatório?', this.isConditionallyRequired(field, parts));
+this.logger.debug('Contexto escola:', JSON.stringify(schoolContext));
+this.logger.debug('Contexto pessoa:', JSON.stringify(personContext));
+this.logger.debug('Valor campo referência:', parts[refField.position]);
+this.logger.debug('Campo obrigatório?', this.isConditionallyRequired(field, parts));
 ```
 
 ### Testes
@@ -622,12 +650,88 @@ const errors = rule.validateWithContext(
   personCtx,
   1,
 );
-console.log('Erros encontrados:', errors.length);
+
+// ✅ Em testes/desenvolvimento é OK usar console:
+if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+  console.log('Erros encontrados:', errors.length);
+}
 ```
 
 ---
 
-## 📈 Performance e Otimizações
+## � Boas Práticas de Logging
+
+### ❌ **O QUE NÃO FAZER em Produção**
+
+```typescript
+// NUNCA em produção - vai estourar os logs!
+console.log('Validando registro:', parts);
+console.error('Erro de validação:', error); // Erros de validação são esperados
+console.warn('Campo inválido:', fieldValue); // Warnings de validação são normais
+```
+
+### ✅ **O QUE FAZER - Logger do NestJS**
+
+```typescript
+import { Logger } from '@nestjs/common';
+
+@Injectable()
+export class MeuService {
+  private readonly logger = new Logger(MeuService.name);
+
+  async validarArquivo() {
+    // ✅ Log de início de operação (INFO)
+    this.logger.log('Iniciando validação de arquivo');
+
+    // ✅ Logs de debug apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      this.logger.debug('Contexto:', JSON.stringify(context));
+    }
+
+    // ✅ Log de erro do sistema (não de validação)
+    if (systemError) {
+      this.logger.error('Erro ao processar arquivo', systemError.stack);
+    }
+
+    // ✅ Log de métricas importantes
+    this.logger.log(
+      `Validação concluída: ${totalRecords} registros em ${time}ms`,
+    );
+  }
+}
+```
+
+### 🎯 **Níveis de Log Corretos**
+
+| Nível     | Uso                             | Exemplo                          |
+| --------- | ------------------------------- | -------------------------------- |
+| `log()`   | Operações importantes           | "Arquivo processado com sucesso" |
+| `error()` | Erros de sistema                | "Falha ao conectar com database" |
+| `warn()`  | Situações anômalas não críticas | "Rate limit atingido"            |
+| `debug()` | Debug apenas em desenvolvimento | "Valor da variável X: ..."       |
+
+### ⚙️ **Configuração de Produção**
+
+```typescript
+// Interceptors otimizados para produção:
+
+// ✅ Log apenas métricas, não conteúdo
+this.logger.log(
+  `Validação: ${isValid ? 'OK' : 'ERRO'} - ${totalRecords} registros - ${time}ms`,
+);
+
+// ✅ Erros de sistema (500), não de validação (400)
+if (error.status !== 400) {
+  this.logger.error(`Erro ${error.status}: ${error.message}`);
+}
+
+// ❌ NUNCA logar todos os erros de validação individualmente
+// errors.forEach(err => logger.warn(err.message)); // VAI ESTOURAR O LOG!
+```
+
+---
+
+## �📈 Performance e Otimizações
 
 ### Validação Rápida vs Completa
 

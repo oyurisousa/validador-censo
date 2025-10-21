@@ -14,10 +14,18 @@ import { SchoolManagerBondRule } from './rules/record-rules/school-manager-bond.
 import { SchoolProfessionalBondRule } from './rules/record-rules/school-professional-bond.rule';
 import { StudentEnrollmentRule } from './rules/record-rules/student-enrollment.rule';
 import { FileEndRule } from './rules/record-rules/file-end.rule';
+import { SchoolManagerSituationRule } from './rules/record-rules/school-manager-situation.rule';
+import { StudentSituationRule } from './rules/record-rules/student-situation.rule';
+import { StudentAdmissionAfterRule } from './rules/record-rules/student-admission-after.rule';
 import { FileStructureRule } from './rules/structural-rules/file-structure.rule';
 import { RecordSequenceRule } from './rules/structural-rules/record-sequence.rule';
 import { SchoolStructureRule } from './rules/structural-rules/school-structure.rule';
 import { CharacterEncodingRule } from './rules/structural-rules/character-encoding.rule';
+import { PhaseTwoStructureRule } from './rules/structural-rules/phase-two-structure.rule';
+import { MunicipalityService } from './utils/municipality.service';
+import { ComplementaryActivityService } from './utils/complementary-activity.service';
+import { StepService } from './utils/step.service';
+import { KnowledgeAreaService } from './utils/knowledge-area.service';
 
 @Module({
   providers: [
@@ -34,6 +42,12 @@ import { CharacterEncodingRule } from './rules/structural-rules/character-encodi
     RecordRulesManagerService,
     StructuralRulesManagerService,
 
+    // Utility Services
+    MunicipalityService,
+    ComplementaryActivityService,
+    StepService,
+    KnowledgeAreaService,
+
     // Record Rules
     SchoolIdentificationRule,
     SchoolCharacterizationRule,
@@ -43,12 +57,16 @@ import { CharacterEncodingRule } from './rules/structural-rules/character-encodi
     SchoolProfessionalBondRule,
     StudentEnrollmentRule,
     FileEndRule,
+    SchoolManagerSituationRule,
+    StudentSituationRule,
+    StudentAdmissionAfterRule,
 
     // Structural Rules
     FileStructureRule,
     RecordSequenceRule,
     SchoolStructureRule,
     CharacterEncodingRule,
+    PhaseTwoStructureRule,
   ],
   exports: [
     ValidationEngineService,

@@ -27,12 +27,28 @@ export class RecordValidatorService {
 
     // Validar campos específicos usando o sistema de regras
     const parts = line.split('|');
-    const fieldErrors = this.recordRulesManager.validateRecord(
-      recordType,
-      parts,
-      lineNumber,
-    );
-    errors.push(...fieldErrors);
+
+    // Usar validação assíncrona para registros que precisam validar com o banco de dados
+    if (
+      recordType === RecordTypeEnum.SCHOOL_IDENTIFICATION ||
+      recordType === RecordTypeEnum.PHYSICAL_PERSONS ||
+      recordType === RecordTypeEnum.CLASSES
+    ) {
+      const fieldErrors = await this.recordRulesManager.validateRecordAsync(
+        recordType,
+        parts,
+        lineNumber,
+      );
+      errors.push(...fieldErrors);
+    } else {
+      // Usar validação síncrona para outros registros
+      const fieldErrors = this.recordRulesManager.validateRecord(
+        recordType,
+        parts,
+        lineNumber,
+      );
+      errors.push(...fieldErrors);
+    }
 
     return errors;
   }

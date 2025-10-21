@@ -5,10 +5,15 @@ import {
 } from '../../../common/enums/record-types.enum';
 import { BaseRecordRule, FieldRule } from '../base-record.rule';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
+import { MunicipalityService } from '../../utils/municipality.service';
 
 @Injectable()
 export class SchoolIdentificationRule extends BaseRecordRule {
   protected readonly recordType = RecordTypeEnum.SCHOOL_IDENTIFICATION;
+
+  constructor(private readonly municipalityService: MunicipalityService) {
+    super();
+  }
 
   protected readonly fields: FieldRule[] = [
     // Campo 1: Tipo de registro
@@ -740,6 +745,43 @@ export class SchoolIdentificationRule extends BaseRecordRule {
       conditionalRequired: { field: 'unidade_vinculada', values: ['2'] },
     },
   ];
+
+  /**
+   * Valida regras de negócio assíncronas específicas para Identificação da Escola
+   */
+  async validateBusinessRulesAsync(
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    const errors: ValidationError[] = [];
+
+    // Validação do município (campo 8)
+    const municipio = parts[7] || ''; // Campo 8 (posição 7)
+    if (municipio && municipio.trim() !== '') {
+      const isValidMunicipality =
+        await this.municipalityService.isValidMunicipality(municipio.trim());
+      if (!isValidMunicipality) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'municipio_validation',
+            'Município',
+            8,
+            municipio,
+            'municipio_codigo_invalido',
+            'O código do município deve estar de acordo com a Tabela de Municípios do INEP',
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+
+    // Adicionar validações síncronas existentes
+    const syncErrors = this.validateBusinessRules(parts, lineNumber);
+    errors.push(...syncErrors);
+
+    return errors;
+  }
 
   /**
    * Valida regras de negócio específicas para Identificação da Escola

@@ -5,6 +5,7 @@ import { FileStructureRule } from './structural-rules/file-structure.rule';
 import { RecordSequenceRule } from './structural-rules/record-sequence.rule';
 import { SchoolStructureRule } from './structural-rules/school-structure.rule';
 import { CharacterEncodingRule } from './structural-rules/character-encoding.rule';
+import { PhaseTwoStructureRule } from './structural-rules/phase-two-structure.rule';
 
 /**
  * Gerenciador das regras estruturais
@@ -17,6 +18,7 @@ export class StructuralRulesManagerService {
     private readonly recordSequenceRule: RecordSequenceRule,
     private readonly schoolStructureRule: SchoolStructureRule,
     private readonly characterEncodingRule: CharacterEncodingRule,
+    private readonly phaseTwoStructureRule: PhaseTwoStructureRule,
   ) {}
 
   /**
@@ -25,15 +27,42 @@ export class StructuralRulesManagerService {
   validateStructure(
     records: string[],
     fileContent?: string,
+    phase: '1' | '2' = '1',
   ): ValidationError[] {
     const errors: ValidationError[] = [];
 
     // Construir contexto de validação
-    const context = this.buildValidationContext(records, fileContent);
+    const context = this.buildValidationContext(records, fileContent, phase);
 
     try {
-      // Executar validações na ordem apropriada
+      // FASE 2: Aplicar apenas regras da Fase 2
+      if (phase === '2') {
+        // Validar codificação (comum a ambas as fases)
+        const charErrors = this.characterEncodingRule.validate(context);
+        errors.push(...charErrors);
 
+        // Aplicar regras específicas da Fase 2
+        const phaseTwoErrors = this.phaseTwoStructureRule.validate(context);
+        errors.push(...phaseTwoErrors);
+
+        // Validar presença do registro 99 (fim de arquivo)
+        if (!context.hasRecord99) {
+          errors.push({
+            lineNumber: 0,
+            recordType: '99',
+            fieldName: 'end_record',
+            fieldPosition: 0,
+            fieldValue: '',
+            ruleName: 'missing_end_record',
+            errorMessage: 'Arquivo incompleto. Não localizado o registro 99.',
+            severity: 'error',
+          });
+        }
+
+        return errors;
+      }
+
+      // FASE 1: Aplicar regras da Fase 1
       // 1. Validar estrutura básica do arquivo
       const fileErrors = this.fileStructureRule.validate(context);
       errors.push(...fileErrors);
@@ -83,13 +112,88 @@ export class StructuralRulesManagerService {
   private buildValidationContext(
     records: string[],
     fileContent?: string,
+    phase: '1' | '2' = '1',
   ): StructuralValidationContext {
     const schoolStructures = new Map();
     let hasRecord99 = false;
     let totalSchools = 0;
     let currentSchool: string | null = null;
 
-    // Primeira passada: analisar estrutura básica
+    // FASE 2: Processar registros da segunda fase
+    if (phase === '2') {
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i].trim();
+        if (!record) continue;
+
+        const parts = record.split('|');
+        const recordType = parts[0] || '';
+
+        if (recordType === '99') {
+          hasRecord99 = true;
+          continue;
+        }
+
+        if (recordType === '89') {
+          currentSchool = parts[1] || '';
+          totalSchools++;
+
+          if (!schoolStructures.has(currentSchool)) {
+            schoolStructures.set(currentSchool, {
+              schoolCode: currentSchool,
+              situacaoFuncionamento: parts[2] || '',
+              dependenciaAdministrativa: parts[5] || '',
+              records: [],
+              hasRecord89: false,
+              record89Count: 0,
+              totalStudentSituations: 0, // Registros 90
+              totalComponentSituations: 0, // Registros 91
+            });
+          }
+
+          const schoolStructure = schoolStructures.get(currentSchool)!;
+          schoolStructure.hasRecord89 = true;
+          schoolStructure.record89Count++;
+          schoolStructure.records.push({
+            type: recordType,
+            lineNumber: i + 1,
+            fieldCount: parts.length,
+            schoolCode: currentSchool,
+            data: parts,
+          });
+        } else if (currentSchool) {
+          const schoolStructure = schoolStructures.get(currentSchool);
+          if (schoolStructure) {
+            switch (recordType) {
+              case '90':
+                schoolStructure.totalStudentSituations++;
+                break;
+              case '91':
+                schoolStructure.totalComponentSituations++;
+                break;
+            }
+
+            schoolStructure.records.push({
+              type: recordType,
+              lineNumber: i + 1,
+              fieldCount: parts.length,
+              schoolCode: currentSchool,
+              data: parts,
+            });
+          }
+        }
+      }
+
+      return {
+        records,
+        schoolStructures,
+        totalSchools,
+        hasRecord99,
+        fileContent,
+        phase,
+      };
+    }
+
+    // FASE 1: Processar registros da primeira fase (código original)
     for (let i = 0; i < records.length; i++) {
       const record = records[i].trim();
       if (!record) continue;
@@ -197,6 +301,7 @@ export class StructuralRulesManagerService {
       totalSchools,
       hasRecord99,
       fileContent,
+      phase,
     };
   }
 
@@ -219,24 +324,33 @@ export class StructuralRulesManagerService {
   /**
    * Valida apenas a estrutura do arquivo
    */
-  validateFileStructureOnly(records: string[]): ValidationError[] {
-    const context = this.buildValidationContext(records);
+  validateFileStructureOnly(
+    records: string[],
+    phase: '1' | '2' = '1',
+  ): ValidationError[] {
+    const context = this.buildValidationContext(records, undefined, phase);
     return this.fileStructureRule.validate(context);
   }
 
   /**
    * Valida apenas a sequência de registros
    */
-  validateRecordSequenceOnly(records: string[]): ValidationError[] {
-    const context = this.buildValidationContext(records);
+  validateRecordSequenceOnly(
+    records: string[],
+    phase: '1' | '2' = '1',
+  ): ValidationError[] {
+    const context = this.buildValidationContext(records, undefined, phase);
     return this.recordSequenceRule.validate(context);
   }
 
   /**
    * Valida apenas as estruturas das escolas
    */
-  validateSchoolStructuresOnly(records: string[]): ValidationError[] {
-    const context = this.buildValidationContext(records);
+  validateSchoolStructuresOnly(
+    records: string[],
+    phase: '1' | '2' = '1',
+  ): ValidationError[] {
+    const context = this.buildValidationContext(records, undefined, phase);
     return this.schoolStructureRule.validate(context);
   }
 }

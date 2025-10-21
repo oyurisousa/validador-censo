@@ -5,10 +5,19 @@ import {
   ValidationSeverity,
 } from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
+import { ComplementaryActivityService } from '../../utils/complementary-activity.service';
+import { StepService } from '../../utils/step.service';
 
 @Injectable()
 export class ClassesRule extends BaseRecordRule {
   protected readonly recordType = RecordTypeEnum.CLASSES;
+
+  constructor(
+    private readonly complementaryActivityService: ComplementaryActivityService,
+    private readonly stepService: StepService,
+  ) {
+    super();
+  }
 
   protected readonly fields: FieldRule[] = [
     // Campo 1: Tipo de registro
@@ -849,6 +858,261 @@ export class ClassesRule extends BaseRecordRule {
   ];
 
   /**
+   * Validates complementary activity codes against the database
+   */
+  async validateComplementaryActivities(
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    const errors: ValidationError[] = [];
+    const atividadeComplementar = parts[14] || ''; // Campo 15 (posição 14)
+
+    // Se Atividade complementar não for 1 (Sim), verifica se campos 17-22 estão vazios
+    if (atividadeComplementar !== '1') {
+      const activityPositions = [16, 17, 18, 19, 20, 21]; // Posições dos campos 17-22
+      const fieldNumbers = [17, 18, 19, 20, 21, 22]; // Números dos campos
+
+      for (let i = 0; i < activityPositions.length; i++) {
+        const position = activityPositions[i];
+        const fieldNumber = fieldNumbers[i];
+        const value = parts[position];
+
+        if (value && value.trim() !== '') {
+          errors.push(
+            this.createError(
+              lineNumber,
+              `codigo_atividade_${i + 1}_nao_permitido`,
+              `Código ${i + 1} - Atividade complementar`,
+              fieldNumber,
+              value,
+              'activity_not_allowed',
+              `O campo "Código ${i + 1} - Atividade complementar" não pode ser preenchido quando o campo "Atividade complementar" não for 1 (Sim)`,
+              ValidationSeverity.ERROR,
+            ),
+          );
+        }
+      }
+
+      return errors;
+    }
+
+    // Se Atividade complementar = 1, valida os códigos informados
+    const activityPositions = [16, 17, 18, 19, 20, 21]; // Posições dos campos 17-22
+    const fieldNumbers = [17, 18, 19, 20, 21, 22]; // Números dos campos
+
+    for (let i = 0; i < activityPositions.length; i++) {
+      const position = activityPositions[i];
+      const fieldNumber = fieldNumbers[i];
+      const activityCode = parts[position];
+
+      // Se o código foi preenchido, valida contra o banco
+      if (activityCode && activityCode.trim() !== '') {
+        const isValid =
+          await this.complementaryActivityService.isValidActivity(activityCode);
+
+        if (!isValid) {
+          errors.push(
+            this.createError(
+              lineNumber,
+              `codigo_atividade_${i + 1}_invalido`,
+              `Código ${i + 1} - Atividade complementar`,
+              fieldNumber,
+              activityCode,
+              'invalid_activity_code',
+              `O código "${activityCode}" não está na Tabela de Tipo de Atividade Complementar do INEP`,
+              ValidationSeverity.ERROR,
+            ),
+          );
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Validates step (etapa) codes against the database
+   */
+  async validateSteps(
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    const errors: ValidationError[] = [];
+    const curricular = parts[13] || ''; // Campo 14 (posição 13)
+    const etapaAgregada = parts[24] || ''; // Campo 25 (posição 24)
+    const etapa = parts[25] || ''; // Campo 26 (posição 25)
+    const formacaoGeralBasica = parts[33] || ''; // Campo 34 (posição 33)
+
+    // Regra 1: Etapa agregada deve ser preenchida quando curricular = 1
+    if (curricular === '1' && !etapaAgregada) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'etapa_agregada_required',
+          'Etapa agregada',
+          25,
+          etapaAgregada,
+          'aggregated_step_required_when_curricular',
+          'O campo "Etapa agregada" deve ser preenchido quando o campo "Curricular (etapa de ensino)" for 1 (Sim)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 2: Etapa agregada não pode ser preenchida quando curricular ≠ 1
+    if (curricular !== '1' && etapaAgregada && etapaAgregada.trim() !== '') {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'etapa_agregada_not_allowed',
+          'Etapa agregada',
+          25,
+          etapaAgregada,
+          'aggregated_step_not_allowed_when_not_curricular',
+          'O campo "Etapa agregada" não pode ser preenchido quando o campo "Curricular (etapa de ensino)" não for 1 (Sim)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 3: Quando preenchida, etapa agregada deve existir na tabela
+    if (etapaAgregada && etapaAgregada.trim() !== '') {
+      const isValid =
+        await this.stepService.isValidAggregatedStep(etapaAgregada);
+      if (!isValid) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'etapa_agregada_invalida',
+            'Etapa agregada',
+            25,
+            etapaAgregada,
+            'invalid_aggregated_step_code',
+            `O código "${etapaAgregada}" não está na Tabela de Etapas do INEP`,
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+
+    // Regra 4: Etapa não pode ser preenchida quando curricular ≠ 1
+    if (curricular !== '1' && etapa && etapa.trim() !== '') {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'etapa_not_allowed_curricular',
+          'Etapa',
+          26,
+          etapa,
+          'step_not_allowed_when_not_curricular',
+          'O campo "Etapa" não pode ser preenchido quando o campo "Curricular (etapa de ensino)" não for 1 (Sim)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 5: Etapa deve ser preenchida em certos casos
+    const etapasQueExigemEtapa = ['301', '302', '303', '306', '308'];
+    if (
+      etapasQueExigemEtapa.includes(etapaAgregada) &&
+      (!etapa || etapa.trim() === '')
+    ) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'etapa_required_for_aggregated',
+          'Etapa',
+          26,
+          etapa,
+          'step_required_for_aggregated_step',
+          `O campo "Etapa" deve ser preenchido quando o campo "Etapa agregada" for ${etapaAgregada}`,
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 6: Etapa deve ser preenchida quando formação geral básica = 1
+    if (formacaoGeralBasica === '1' && (!etapa || etapa.trim() === '')) {
+      errors.push(
+        this.createError(
+          lineNumber,
+          'etapa_required_formacao_geral',
+          'Etapa',
+          26,
+          etapa,
+          'step_required_when_formacao_geral',
+          'O campo "Etapa" deve ser preenchido quando o campo "Formação geral básica" for 1 (Sim)',
+          ValidationSeverity.ERROR,
+        ),
+      );
+    }
+
+    // Regra 7: Quando preenchida, etapa deve existir na tabela
+    if (etapa && etapa.trim() !== '') {
+      const isValid = await this.stepService.isValidStep(etapa);
+      if (!isValid) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'etapa_invalida',
+            'Etapa',
+            26,
+            etapa,
+            'invalid_step_code',
+            `O código "${etapa}" não está na Tabela de Etapas do INEP`,
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+
+    // Regra 8: Validar compatibilidade entre etapa e etapa agregada
+    if (
+      etapa &&
+      etapa.trim() !== '' &&
+      etapaAgregada &&
+      etapaAgregada.trim() !== ''
+    ) {
+      const isCompatible =
+        await this.stepService.isStepCompatibleWithAggregated(
+          etapa,
+          etapaAgregada,
+        );
+
+      if (!isCompatible) {
+        // Validações específicas por etapa agregada
+        const expectedSteps: Record<string, string[]> = {
+          '301': ['1', '2', '3'], // Educação Infantil
+          '302': ['14', '15', '16', '17', '18', '19', '20', '21', '41'], // Ensino Fundamental
+          '303': ['22', '23', '56'], // Multi e correção de fluxo
+          '304': ['25', '26', '27', '28', '29'], // Ensino Médio (com formação geral)
+          '305': ['35', '36', '37', '38'], // Ensino Médio - Normal/Magistério
+          '306': ['69', '70', '72', '71', '74', '73', '67'], // EJA
+          '308': ['39', '40', '64', '68'], // Educação Profissional
+        };
+
+        const expected = expectedSteps[etapaAgregada];
+        if (expected) {
+          errors.push(
+            this.createError(
+              lineNumber,
+              'etapa_incompativel_agregada',
+              'Etapa',
+              26,
+              etapa,
+              'step_incompatible_with_aggregated',
+              `A etapa "${etapa}" não é compatível com a etapa agregada "${etapaAgregada}". Etapas esperadas: ${expected.join(', ')}`,
+              ValidationSeverity.ERROR,
+            ),
+          );
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  /**
    * Validates business rules for Classes (registro 20)
    */
   protected validateBusinessRules(
@@ -1076,6 +1340,28 @@ export class ClassesRule extends BaseRecordRule {
     }
 
     return errors;
+  }
+
+  /**
+   * Validates the record asynchronously (includes database validations)
+   */
+  async validateAsync(
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    // First, run all synchronous validations
+    const syncErrors = this.validate(parts, lineNumber);
+
+    // Then, run async complementary activity validations
+    const activityErrors = await this.validateComplementaryActivities(
+      parts,
+      lineNumber,
+    );
+
+    // Then, run async step validations
+    const stepErrors = await this.validateSteps(parts, lineNumber);
+
+    return [...syncErrors, ...activityErrors, ...stepErrors];
   }
 
   /**

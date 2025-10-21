@@ -161,3 +161,39 @@ A correção implementada resolve o problema identificado, implementando as regr
 - **Validação contextual considera dados dos registros 40, 50 e 60**
 
 Isso garante que alunos brasileiros em etapas que não exigem CPF (como ensino fundamental) não tenham erro de validação incorreto.
+
+## Problema Adicional Corrigido: Duplicação de Erros
+
+### **Problema Identificado**
+
+Usuário reportou que cada erro aparecia **duas vezes** para a mesma linha:
+
+```
+285	30	54	Zona de residência	Zona de residência é obrigatória para residência no Brasil	-
+285	30	54	Zona de residência	Zona de residência é obrigatória para residência no Brasil	-
+```
+
+### **Causa Raiz**
+
+O método `validateWithContext()` estava executando validações duplicadas:
+
+1. `super.validate()` → executava `validateBusinessRules()`
+2. `this.validateBusinessRules()` → executava as mesmas regras novamente
+
+### **Solução Implementada**
+
+```typescript
+// ANTES (duplicado)
+const fieldErrors = super.validate(parts, lineNumber);
+const businessErrors = this.validateBusinessRules(parts, lineNumber);
+
+// DEPOIS (sem duplicação)
+const basicErrors = this.validate(parts, lineNumber); // já inclui tudo
+```
+
+### **Benefícios**
+
+- ✅ **Eliminação de erros duplicados**
+- ✅ **Melhor performance** (menos validações redundantes)
+- ✅ **Logs mais limpos** para análise
+- ✅ **Validações contextuais mantidas** (CPF baseado em vínculo)

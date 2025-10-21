@@ -1,0 +1,32 @@
+# Ignora dependências já gerenciadas dentro do Dockerfile
+node_modules
+npm-debug.log
+
+# Ignora arquivos de build locais
+dist
+build
+
+# Arquivos do Prisma gerados localmente
+.prisma
+
+# Arquivos de ambiente sensíveis
+.env
+.env.*  # .env.production, .env.development, etc
+
+# Ignora configurações do editor e IDEs
+.vscode
+.idea
+
+# Ignora arquivos de testes
+coverage
+*.test.ts
+*.spec.ts
+test/
+tests/
+
+# Outros arquivos que não são usados no build
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+*.md

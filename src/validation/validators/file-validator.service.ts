@@ -10,6 +10,7 @@ export class FileValidatorService {
   async validateFile(
     content: string,
     fileName: string,
+    phase: '1' | '2' = '1',
   ): Promise<ValidationError[]> {
     const errors: ValidationError[] = [];
 
@@ -22,7 +23,7 @@ export class FileValidatorService {
     errors.push(...fileSizeErrors);
 
     // Validar estrutura geral do arquivo
-    const structureErrors = this.validateFileStructure(content);
+    const structureErrors = this.validateFileStructure(content, phase);
     errors.push(...structureErrors);
 
     return errors;
@@ -109,7 +110,10 @@ export class FileValidatorService {
     return errors;
   }
 
-  private validateFileStructure(content: string): ValidationError[] {
+  private validateFileStructure(
+    content: string,
+    phase: '1' | '2' = '1',
+  ): ValidationError[] {
     const errors: ValidationError[] = [];
 
     // Verificar se o arquivo não está vazio
@@ -156,19 +160,23 @@ export class FileValidatorService {
       });
     }
 
-    // Verificar se há pelo menos um registro de escola (00)
-    const hasSchoolRecord = lines.some((line) => line.trim().startsWith('00|'));
-    if (!hasSchoolRecord) {
-      errors.push({
-        lineNumber: 0,
-        recordType: 'FILE',
-        fieldName: 'file_structure',
-        fieldValue: '',
-        ruleName: 'file_school_record',
-        errorMessage:
-          'Arquivo deve conter pelo menos um registro de identificação da escola (00)',
-        severity: ValidationSeverity.ERROR,
-      });
+    // Verificar se há pelo menos um registro de escola (00) - SOMENTE PARA FASE 1
+    if (phase === '1') {
+      const hasSchoolRecord = lines.some((line) =>
+        line.trim().startsWith('00|'),
+      );
+      if (!hasSchoolRecord) {
+        errors.push({
+          lineNumber: 0,
+          recordType: 'FILE',
+          fieldName: 'file_structure',
+          fieldValue: '',
+          ruleName: 'file_school_record',
+          errorMessage:
+            'Arquivo deve conter pelo menos um registro de identificação da escola (00)',
+          severity: ValidationSeverity.ERROR,
+        });
+      }
     }
 
     // Verificar se há registros duplicados de final de arquivo

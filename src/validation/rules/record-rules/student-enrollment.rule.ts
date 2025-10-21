@@ -1122,20 +1122,24 @@ export class StudentEnrollmentRule extends BaseRecordRule {
     errors: ValidationError[],
   ): void {
     const hasAEE = classContext.specializedEducationalService;
-    const aeFields = parts.slice(8, 19); // Campos 9-19
+    const aeFields = parts.slice(8, 19).map((field) => field || ''); // Campos 9-19, preserva vazio
 
     if (hasAEE) {
-      // Verificar se pelo menos um campo está preenchido com 1
-      const hasAtLeastOne = aeFields.some((field) => field === '1');
+      // Separar campos preenchidos de campos vazios
+      const filledFields = aeFields.filter((field) => field.trim() !== '');
 
-      if (!hasAtLeastOne) {
+      // Verificar se pelo menos um campo preenchido está com 1
+      const hasAtLeastOne = filledFields.some((field) => field === '1');
+
+      // Só valida "todos são 0" se houver campos preenchidos e nenhum for "1"
+      if (filledFields.length > 0 && !hasAtLeastOne) {
         errors.push(
           this.createError(
             lineNumber || 0,
             'specialized_education_services',
             'Tipo de atendimento educacional especializado',
             8,
-            aeFields.join(', '),
+            filledFields.join(', '),
             'at_least_one_required',
             '"Tipo de atendimento educacional especializado" não foi preenchido corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não).',
             ValidationSeverity.ERROR,
@@ -1482,8 +1486,13 @@ export class StudentEnrollmentRule extends BaseRecordRule {
         }
       });
 
-      // Verificar se todos são 0 (não permitido)
-      const allZero = vehicleFields.every((field) => field === '0');
+      // Verificar se todos os campos preenchidos são 0 (não permitido)
+      const filledVehicleFields = vehicleFields.filter(
+        (field) => field && field.trim() !== '',
+      );
+      const allZero =
+        filledVehicleFields.length > 0 &&
+        filledVehicleFields.every((field) => field === '0');
       if (allZero) {
         errors.push(
           this.createError(
@@ -1491,7 +1500,7 @@ export class StudentEnrollmentRule extends BaseRecordRule {
             'vehicle_types',
             'Tipo de veículo utilizado no transporte escolar',
             22,
-            vehicleFields.join(', '),
+            filledVehicleFields.join(', '),
             'at_least_one_vehicle_required',
             'Todas as opções de tipo de veículo utilizado no transporte escolar público foram preenchidas com 0 (Não).',
             ValidationSeverity.ERROR,

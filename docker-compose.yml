@@ -1,0 +1,12 @@
+services:
+  postgres:
+    container_name: censo-db
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_USERNAME=docker
+      - POSTGRESQL_PASSWORD=docker
+      - POSTGRESQL_DATABASE=censo
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/bitnami/postgresql

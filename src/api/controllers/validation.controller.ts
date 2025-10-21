@@ -37,7 +37,8 @@ export class ValidationController {
   @ApiOperation({
     summary: 'Validar linha individual sem contexto',
     description:
-      'Valida uma única linha de registro (tipo 00-60) sem considerar contexto de outros registros. ' +
+      'Valida uma única linha de registro sem considerar contexto de outros registros. ' +
+      'Suporta FASE 1 (registros 00-60) e FASE 2 (registros 89-91). ' +
       'Valida apenas a estrutura e campos da linha específica.',
   })
   @ApiBody({
@@ -46,9 +47,10 @@ export class ValidationController {
       properties: {
         recordType: {
           type: 'string',
-          description: 'Tipo do registro (00, 10, 20, 30, 40, 50, 60)',
+          description:
+            'Tipo do registro - FASE 1: (00, 10, 20, 30, 40, 50, 60) | FASE 2: (89, 90, 91)',
           example: '30',
-          enum: ['00', '10', '20', '30', '40', '50', '60'],
+          enum: ['00', '10', '20', '30', '40', '50', '60', '89', '90', '91'],
         },
         line: {
           type: 'string',
@@ -60,6 +62,13 @@ export class ValidationController {
           type: 'string',
           description: 'Versão do layout (padrão: 2025)',
           example: '2025',
+        },
+        phase: {
+          type: 'string',
+          description:
+            'Fase do Censo: "1" para Matrícula Inicial (00-60), "2" para Situação do Aluno (89-91)',
+          example: '1',
+          enum: ['1', '2'],
         },
       },
       required: ['recordType', 'line'],
@@ -93,6 +102,7 @@ export class ValidationController {
       recordType: string;
       line: string;
       version?: string;
+      phase?: '1' | '2';
     },
   ): Promise<{
     isValid: boolean;
@@ -109,10 +119,46 @@ export class ValidationController {
       throw new BadRequestException('Linha é obrigatória');
     }
 
-    const validRecordTypes = ['00', '10', '20', '30', '40', '50', '60'];
-    if (!validRecordTypes.includes(request.recordType)) {
+    // Definir fase padrão como 1 se não especificada
+    const phase = request.phase || '1';
+
+    // Validar tipos de registro por fase
+    const phase1RecordTypes = ['00', '10', '20', '30', '40', '50', '60'];
+    const phase2RecordTypes = ['89', '90', '91'];
+    const commonRecordTypes = ['99'];
+
+    const allValidRecordTypes = [
+      ...phase1RecordTypes,
+      ...phase2RecordTypes,
+      ...commonRecordTypes,
+    ];
+
+    if (!allValidRecordTypes.includes(request.recordType)) {
       throw new BadRequestException(
-        `Tipo de registro inválido. Valores permitidos: ${validRecordTypes.join(', ')}`,
+        `Tipo de registro inválido. Valores permitidos: ${allValidRecordTypes.join(', ')}`,
+      );
+    }
+
+    // Validar se o tipo de registro corresponde à fase informada
+    if (
+      phase === '1' &&
+      !phase1RecordTypes.includes(request.recordType) &&
+      !commonRecordTypes.includes(request.recordType)
+    ) {
+      throw new BadRequestException(
+        `Tipo de registro "${request.recordType}" não é válido para FASE 1 (Matrícula Inicial). ` +
+          `Registros permitidos: ${[...phase1RecordTypes, ...commonRecordTypes].join(', ')}`,
+      );
+    }
+
+    if (
+      phase === '2' &&
+      !phase2RecordTypes.includes(request.recordType) &&
+      !commonRecordTypes.includes(request.recordType)
+    ) {
+      throw new BadRequestException(
+        `Tipo de registro "${request.recordType}" não é válido para FASE 2 (Situação do Aluno). ` +
+          `Registros permitidos: ${[...phase2RecordTypes, ...commonRecordTypes].join(', ')}`,
       );
     }
 
@@ -121,6 +167,7 @@ export class ValidationController {
       request.line,
       request.recordType,
       request.version || '2025',
+      phase,
     );
 
     return {
@@ -139,7 +186,8 @@ export class ValidationController {
     summary: 'Validar arquivo completo com contexto',
     description:
       'Valida um arquivo completo do Censo Escolar (múltiplas linhas) considerando contexto entre registros, ' +
-      'estrutura do arquivo e validações cruzadas.',
+      'estrutura do arquivo e validações cruzadas. ' +
+      'Suporta FASE 1 (Matrícula Inicial - registros 00-60) e FASE 2 (Situação do Aluno - registros 89-91).',
   })
   @ApiBody({
     schema: {
@@ -160,6 +208,13 @@ export class ValidationController {
           description: 'Versão do layout (padrão: 2025)',
           example: '2025',
         },
+        phase: {
+          type: 'string',
+          description:
+            'Fase do Censo: "1" para Matrícula Inicial (00-60), "2" para Situação do Aluno (89-91)',
+          example: '1',
+          enum: ['1', '2'],
+        },
       },
       required: ['lines'],
     },
@@ -178,7 +233,7 @@ export class ValidationController {
     description: 'Limite de requisições excedido',
   })
   async validateFileWithContext(
-    @Body() request: { lines: string[]; version?: string },
+    @Body() request: { lines: string[]; version?: string; phase?: '1' | '2' },
   ): Promise<ValidationResultDto> {
     // Validação 1: Lista de linhas é obrigatória
     if (!request.lines || !Array.isArray(request.lines)) {
@@ -206,10 +261,14 @@ export class ValidationController {
     // Converter array de linhas para string com quebras de linha
     const content = validLines.join('\n');
 
+    // Definir fase padrão como 1 se não especificada
+    const phase = request.phase || '1';
+
     const result = await this.validationEngine.validateFile(
       content,
       'file.txt',
       request.version || '2025',
+      phase,
     );
 
     // Converter Date para string para compatibilidade com DTO
@@ -230,7 +289,8 @@ export class ValidationController {
     summary: 'Upload e validação completa de arquivo',
     description:
       'Faz upload de um arquivo TXT e realiza validação completa com contexto entre registros, ' +
-      'estrutura e validações cruzadas.',
+      'estrutura e validações cruzadas. ' +
+      'Suporta FASE 1 (Matrícula Inicial - registros 00-60) e FASE 2 (Situação do Aluno - registros 89-91).',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -246,6 +306,13 @@ export class ValidationController {
           type: 'string',
           description: 'Versão do layout (ex: 2025)',
           example: '2025',
+        },
+        phase: {
+          type: 'string',
+          description:
+            'Fase do Censo: "1" para Matrícula Inicial (00-60), "2" para Situação do Aluno (89-91)',
+          example: '1',
+          enum: ['1', '2'],
         },
       },
       required: ['file'],
@@ -267,6 +334,7 @@ export class ValidationController {
   async uploadAndValidate(
     @UploadedFile() file: Express.Multer.File,
     @Body('version') version?: string,
+    @Body('phase') phase?: '1' | '2',
   ): Promise<ValidationResultDto> {
     // Validação 1: Arquivo obrigatório
     if (!file) {
@@ -301,10 +369,14 @@ export class ValidationController {
       throw new BadRequestException('Arquivo está vazio');
     }
 
+    // Definir fase padrão como 1 se não especificada
+    const censusPhase = phase || '1';
+
     const result = await this.validationEngine.validateFile(
       content,
       file.originalname,
       version || '2025',
+      censusPhase,
     );
 
     // Converter Date para string para compatibilidade com DTO

@@ -5,6 +5,7 @@ import {
   ValidationSeverity,
 } from '../../../common/enums/record-types.enum';
 import { ValidationError } from '../../../common/interfaces/validation.interface';
+import { MunicipalityService } from '../../utils/municipality.service';
 
 /**
  * Validation rules for Physical Persons (Record 30)
@@ -20,6 +21,10 @@ import { ValidationError } from '../../../common/interfaces/validation.interface
 @Injectable()
 export class PhysicalPersonsRule extends BaseRecordRule {
   protected readonly recordType = RecordTypeEnum.PHYSICAL_PERSONS;
+
+  constructor(private readonly municipalityService: MunicipalityService) {
+    super();
+  }
 
   protected readonly fields: FieldRule[] = [
     // Campo 1: Tipo de registro
@@ -1289,6 +1294,82 @@ export class PhysicalPersonsRule extends BaseRecordRule {
     if (remainder !== parseInt(cpf.charAt(10))) return false;
 
     return true;
+  }
+
+  /**
+   * Validates async business rules for Physical Persons (registro 30)
+   * Including municipality validations against INEP auxiliary table
+   */
+  async validateBusinessRulesAsync(
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    const errors: ValidationError[] = [];
+
+    // Validação do município de nascimento (campo 16)
+    const nacionalidade = parts[13] || ''; // Campo 14 (posição 13)
+    const municipioNascimento = parts[15] || ''; // Campo 16 (posição 15)
+
+    if (
+      nacionalidade === '1' &&
+      municipioNascimento &&
+      municipioNascimento.trim() !== ''
+    ) {
+      const isValidMunicipality =
+        await this.municipalityService.isValidMunicipality(
+          municipioNascimento.trim(),
+        );
+      if (!isValidMunicipality) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'municipio_nascimento_validation',
+            'Município de nascimento',
+            16,
+            municipioNascimento,
+            'municipio_nascimento_codigo_invalido',
+            'O código do município de nascimento deve estar de acordo com a Tabela de Municípios do INEP',
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+
+    // Validação do município de residência (campo 53)
+    const cep = parts[51] || ''; // Campo 52 (posição 51)
+    const municipioResidencia = parts[52] || ''; // Campo 53 (posição 52)
+
+    if (
+      cep &&
+      cep.trim() !== '' &&
+      municipioResidencia &&
+      municipioResidencia.trim() !== ''
+    ) {
+      const isValidMunicipality =
+        await this.municipalityService.isValidMunicipality(
+          municipioResidencia.trim(),
+        );
+      if (!isValidMunicipality) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'municipio_residencia_validation',
+            'Município de residência',
+            53,
+            municipioResidencia,
+            'municipio_residencia_codigo_invalido',
+            'O código do município de residência deve estar de acordo com a Tabela de Municípios do INEP',
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    }
+
+    // Adicionar validações síncronas existentes
+    const syncErrors = this.validateBusinessRules(parts, lineNumber);
+    errors.push(...syncErrors);
+
+    return errors;
   }
 
   /**

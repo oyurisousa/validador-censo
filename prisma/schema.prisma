@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UF {
+  code           String         @id @db.VarChar(2)
+  name           String         @db.VarChar(100)
+  municipalities Municipality[]
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  @@map("ufs")
+}
+
+model Municipality {
+  code      String   @id @db.VarChar(7)
+  name      String   @db.VarChar(100)
+  ufCode    String   @map("uf_code") @db.VarChar(2)
+  uf        UF       @relation(fields: [ufCode], references: [code], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ufCode])
+  @@map("municipalities")
+}
+
+model Area {
+  code                    String                  @id @db.VarChar(10)
+  name                    String                  @db.VarChar(255)
+  subAreas                SubArea[]
+  complementaryActivities ComplementaryActivity[]
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
+
+  @@map("areas")
+}
+
+model SubArea {
+  code                    String                  @id @db.VarChar(10)
+  name                    String                  @db.VarChar(255)
+  areaCode                String                  @map("area_code") @db.VarChar(10)
+  area                    Area                    @relation(fields: [areaCode], references: [code], onDelete: Cascade)
+  complementaryActivities ComplementaryActivity[]
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
+
+  @@index([areaCode])
+  @@map("sub_areas")
+}
+
+model ComplementaryActivity {
+  code        String   @id @db.VarChar(10)
+  name        String   @db.VarChar(255)
+  areaCode    String   @map("area_code") @db.VarChar(10)
+  subAreaCode String   @map("sub_area_code") @db.VarChar(10)
+  area        Area     @relation(fields: [areaCode], references: [code], onDelete: Cascade)
+  subArea     SubArea  @relation(fields: [subAreaCode], references: [code], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([areaCode])
+  @@index([subAreaCode])
+  @@map("complementary_activities")
+}
+
+model AggregatedStep {
+  code      String   @id @db.VarChar(10)
+  name      String   @db.VarChar(255)
+  steps     Step[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("aggregated_steps")
+}
+
+model Step {
+  code               String          @id @db.VarChar(10)
+  name               String          @db.VarChar(255)
+  aggregatedStepCode String?         @map("aggregated_step_code") @db.VarChar(10)
+  aggregatedStep     AggregatedStep? @relation(fields: [aggregatedStepCode], references: [code], onDelete: Cascade)
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  @@index([aggregatedStepCode])
+  @@map("steps")
+}
+
+model KnowledgeAreaCategory {
+  code           String          @id @db.VarChar(50)
+  name           String          @db.VarChar(255)
+  knowledgeAreas KnowledgeArea[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@map("knowledge_area_categories")
+}
+
+model KnowledgeArea {
+  code         String                 @id @db.VarChar(10)
+  name         String                 @db.VarChar(255)
+  categoryCode String?                @map("category_code") @db.VarChar(50)
+  category     KnowledgeAreaCategory? @relation(fields: [categoryCode], references: [code], onDelete: Cascade)
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  @@index([categoryCode])
+  @@map("knowledge_areas")
+}

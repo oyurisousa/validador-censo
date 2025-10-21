@@ -63,6 +63,7 @@ export class ValidationEngineService {
     content: string,
     fileName: string,
     version: string = '2025',
+    phase: '1' | '2' = '1',
   ): Promise<ValidationResult> {
     const startTime = Date.now();
     const lines = content.split('\n').filter((line) => line.trim() !== '');
@@ -74,6 +75,7 @@ export class ValidationEngineService {
     const fileValidationErrors = await this.fileValidator.validateFile(
       content,
       fileName,
+      phase,
     );
     errors.push(...fileValidationErrors);
 
@@ -81,6 +83,7 @@ export class ValidationEngineService {
     const structuralErrors = this.structuralValidator.validateStructure(
       lines,
       content,
+      phase,
     );
     errors.push(...structuralErrors);
 
@@ -176,6 +179,7 @@ export class ValidationEngineService {
     records: string[],
     fileName: string = 'records.txt',
     version: string = '2025',
+    phase: '1' | '2' = '1',
   ): Promise<ValidationResult> {
     const startTime = Date.now();
     const errors: ValidationError[] = [];
@@ -187,6 +191,7 @@ export class ValidationEngineService {
     const fileValidationErrors = await this.fileValidator.validateFile(
       content,
       fileName,
+      phase,
     );
     errors.push(...fileValidationErrors);
 
@@ -625,12 +630,54 @@ export class ValidationEngineService {
     line: string,
     recordTypeCode: string,
     version: string = '2025',
+    phase: '1' | '2' = '1',
   ): Promise<{
     errors: ValidationError[];
     warnings: ValidationError[];
   }> {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
+
+    // Validar se o tipo de registro é válido para a fase especificada
+    const phase1RecordTypes = ['00', '10', '20', '30', '40', '50', '60'];
+    const phase2RecordTypes = ['89', '90', '91'];
+    const commonRecordTypes = ['99'];
+
+    if (
+      phase === '1' &&
+      !phase1RecordTypes.includes(recordTypeCode) &&
+      !commonRecordTypes.includes(recordTypeCode)
+    ) {
+      errors.push({
+        lineNumber: 1,
+        recordType: 'UNKNOWN',
+        fieldName: 'record_type',
+        fieldPosition: 0,
+        fieldValue: recordTypeCode,
+        ruleName: 'invalid_record_type_for_phase',
+        errorMessage: `Tipo de registro ${recordTypeCode} não é válido para FASE 1 (Matrícula Inicial). Valores permitidos: ${[...phase1RecordTypes, ...commonRecordTypes].join(', ')}`,
+        severity: ValidationSeverity.ERROR,
+      });
+      return { errors, warnings }; // ⛔ PARA AQUI
+    }
+
+    if (
+      phase === '2' &&
+      !phase2RecordTypes.includes(recordTypeCode) &&
+      !commonRecordTypes.includes(recordTypeCode)
+    ) {
+      errors.push({
+        lineNumber: 1,
+        recordType: 'UNKNOWN',
+        fieldName: 'record_type',
+        fieldPosition: 0,
+        fieldValue: recordTypeCode,
+        ruleName: 'invalid_record_type_for_phase',
+        errorMessage: `Tipo de registro ${recordTypeCode} não é válido para FASE 2 (Situação do Aluno). Valores permitidos: ${[...phase2RecordTypes, ...commonRecordTypes].join(', ')}`,
+        severity: ValidationSeverity.ERROR,
+      });
+      return { errors, warnings }; // ⛔ PARA AQUI
+    }
 
     // ====== VALIDAÇÃO 1: Tipo de registro informado é válido? ======
     const recordType = this.convertRecordTypeCodeToEnum(recordTypeCode);
@@ -642,7 +689,7 @@ export class ValidationEngineService {
         fieldPosition: 0,
         fieldValue: recordTypeCode,
         ruleName: 'invalid_record_type',
-        errorMessage: `Tipo de registro inválido: ${recordTypeCode}. Valores permitidos: 00, 10, 20, 30, 40, 50, 60`,
+        errorMessage: `Tipo de registro inválido: ${recordTypeCode}. Valores permitidos: ${[...phase1RecordTypes, ...phase2RecordTypes, ...commonRecordTypes].join(', ')}`,
         severity: ValidationSeverity.ERROR,
       });
       return { errors, warnings }; // ⛔ PARA AQUI
@@ -717,6 +764,7 @@ export class ValidationEngineService {
    */
   private getExpectedFieldCount(recordTypeCode: string): number {
     switch (recordTypeCode) {
+      // FASE 1 - Matrícula Inicial
       case '00': // School Identification (school-identification.rule.ts)
         return 56;
       case '10': // School Characterization (school-characterization.rule.ts)
@@ -731,8 +779,19 @@ export class ValidationEngineService {
         return 38;
       case '60': // Student Enrollment (student-enrollment.rule.ts)
         return 32;
+
+      // FASE 2 - Situação do Aluno
+      case '89': // School Manager Situation (school-manager-situation.rule.ts)
+        return 6;
+      case '90': // Student Situation (student-situation.rule.ts)
+        return 8;
+      case '91': // Student Admission After (student-admission-after.rule.ts)
+        return 11;
+
+      // Comum às duas fases
       case '99': // File End (file-end.rule.ts)
         return 1;
+
       default:
         return 0;
     }
@@ -740,6 +799,7 @@ export class ValidationEngineService {
 
   private convertRecordTypeCodeToEnum(code: string): RecordTypeEnum | null {
     switch (code) {
+      // FASE 1 - Matrícula Inicial
       case '00':
         return RecordTypeEnum.SCHOOL_IDENTIFICATION;
       case '10':
@@ -754,8 +814,19 @@ export class ValidationEngineService {
         return RecordTypeEnum.SCHOOL_PROFESSIONAL_LINKS;
       case '60':
         return RecordTypeEnum.STUDENT_ENROLLMENT;
+
+      // FASE 2 - Situação do Aluno
+      case '89':
+        return RecordTypeEnum.SCHOOL_MANAGER_SITUATION;
+      case '90':
+        return RecordTypeEnum.STUDENT_SITUATION;
+      case '91':
+        return RecordTypeEnum.STUDENT_ADMISSION_AFTER;
+
+      // Comum às duas fases
       case '99':
         return RecordTypeEnum.FILE_END;
+
       default:
         return null;
     }

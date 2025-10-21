@@ -7,6 +7,9 @@ import { SchoolManagerBondRule } from './record-rules/school-manager-bond.rule';
 import { SchoolProfessionalBondRule } from './record-rules/school-professional-bond.rule';
 import { StudentEnrollmentRule } from './record-rules/student-enrollment.rule';
 import { FileEndRule } from './record-rules/file-end.rule';
+import { SchoolManagerSituationRule } from './record-rules/school-manager-situation.rule';
+import { StudentSituationRule } from './record-rules/student-situation.rule';
+import { StudentAdmissionAfterRule } from './record-rules/student-admission-after.rule';
 import { BaseRecordRule } from './base-record.rule';
 import { RecordTypeEnum } from 'src/common/enums/record-types.enum';
 import type { ValidationError } from 'src/common/interfaces/validation.interface';
@@ -24,12 +27,15 @@ export class RecordRulesManagerService {
     private readonly schoolProfessionalBondRule: SchoolProfessionalBondRule,
     private readonly studentEnrollmentRule: StudentEnrollmentRule,
     private readonly fileEndRule: FileEndRule,
+    private readonly schoolManagerSituationRule: SchoolManagerSituationRule,
+    private readonly studentSituationRule: StudentSituationRule,
+    private readonly studentAdmissionAfterRule: StudentAdmissionAfterRule,
   ) {
     this.initializeRules();
   }
 
   private initializeRules(): void {
-    // Registrar todas as regras
+    // Registrar todas as regras - FASE 1
     this.rules.set(
       RecordTypeEnum.SCHOOL_IDENTIFICATION,
       this.schoolIdentificationRule,
@@ -53,11 +59,23 @@ export class RecordRulesManagerService {
       this.studentEnrollmentRule,
     );
 
+    // FASE 2 - Situação do Aluno
+    this.rules.set(
+      RecordTypeEnum.SCHOOL_MANAGER_SITUATION,
+      this.schoolManagerSituationRule,
+    );
+    this.rules.set(RecordTypeEnum.STUDENT_SITUATION, this.studentSituationRule);
+    this.rules.set(
+      RecordTypeEnum.STUDENT_ADMISSION_AFTER,
+      this.studentAdmissionAfterRule,
+    );
+
+    // Comum às duas fases
     this.rules.set(RecordTypeEnum.FILE_END, this.fileEndRule);
   }
 
   /**
-   * Valida um registro usando as regras específicas
+   * Valida um registro usando as regras específicas (síncrono)
    */
   validateRecord(
     recordType: RecordTypeEnum,
@@ -81,6 +99,40 @@ export class RecordRulesManagerService {
       ];
     }
 
+    return rule.validate(parts, lineNumber);
+  }
+
+  /**
+   * Valida um registro usando as regras específicas (assíncrono)
+   */
+  async validateRecordAsync(
+    recordType: RecordTypeEnum,
+    parts: string[],
+    lineNumber: number,
+  ): Promise<ValidationError[]> {
+    const rule = this.rules.get(recordType);
+
+    if (!rule) {
+      return [
+        {
+          lineNumber,
+          recordType,
+          fieldName: 'record_type',
+          fieldPosition: 0, // Tipo de registro é sempre a primeira posição
+          fieldValue: recordType,
+          ruleName: 'unsupported_record_type',
+          errorMessage: `Tipo de registro ${recordType} não é suportado`,
+          severity: 'error',
+        },
+      ];
+    }
+
+    // Verifica se a regra tem método assíncrono
+    if (typeof (rule as any).validateAsync === 'function') {
+      return await (rule as any).validateAsync(parts, lineNumber);
+    }
+
+    // Fallback para validação síncrona
     return rule.validate(parts, lineNumber);
   }
 

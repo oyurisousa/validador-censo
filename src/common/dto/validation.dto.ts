@@ -231,4 +231,15 @@ export class ValidationRequestDto {
   @IsString()
   @IsOptional()
   version?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Fase do Censo Escolar: "1" para Matrícula Inicial (registros 00-60), "2" para Situação do Aluno (registros 89-91)',
+    example: '1',
+    default: '1',
+    enum: ['1', '2'],
+  })
+  @IsString()
+  @IsOptional()
+  phase?: '1' | '2';
 }

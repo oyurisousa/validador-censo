@@ -46,6 +46,7 @@ export interface StructuralValidationContext {
   totalSchools: number;
   hasRecord99: boolean;
   fileContent?: string;
+  phase?: '1' | '2'; // Fase do Censo: 1 = Matrícula Inicial, 2 = Situação do Aluno
 }
 
 /**

@@ -18,8 +18,13 @@ export class StructuralValidatorService {
   validateStructure(
     records: string[],
     fileContent?: string,
+    phase: '1' | '2' = '1',
   ): ValidationError[] {
-    return this.structuralRulesManager.validateStructure(records, fileContent);
+    return this.structuralRulesManager.validateStructure(
+      records,
+      fileContent,
+      phase,
+    );
   }
 
   /**
