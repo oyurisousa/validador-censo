@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   UseGuards,
   BadRequestException,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -32,6 +33,7 @@ export class ValidationController {
   constructor(private readonly validationEngine: ValidationEngineService) {}
 
   @Post('validate-line')
+  @HttpCode(200)
   @UseGuards(ValidationGuard)
   @UseInterceptors(ValidationLoggingInterceptor)
   @ApiOperation({
@@ -180,6 +182,7 @@ export class ValidationController {
   }
 
   @Post('validate-file')
+  @HttpCode(200)
   @UseGuards(ValidationGuard)
   @UseInterceptors(ValidationLoggingInterceptor)
   @ApiOperation({
@@ -284,6 +287,7 @@ export class ValidationController {
   }
 
   @Post('upload')
+  @HttpCode(200)
   @UseInterceptors(FileInterceptor('file'), ValidationLoggingInterceptor)
   @ApiOperation({
     summary: 'Upload e validação completa de arquivo',
