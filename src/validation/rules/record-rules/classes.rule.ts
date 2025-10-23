@@ -1312,31 +1312,56 @@ export class ClassesRule extends BaseRecordRule {
       }
     }
 
-    // Regra 9: Não podem todos os campos de 43 a 69 serem preenchidos com 0 (Não)
+    // Regra 9: Campos 43-69 não podem ser preenchidos quando etapa = 1, 2 ou 3
+    const etapa = parts[25] || ''; // Campo 26 (posição 25)
     const componentPositions = [
       42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
       60, 61, 62, 63, 64, 65, 66, 67, 68,
     ]; // Posições dos campos 43-69
 
-    const componentValues = componentPositions.map((pos) => parts[pos] || '');
-    const componentsFilled = componentValues.filter((value) => value !== '');
-    const allComponentsZero =
-      componentsFilled.length > 0 &&
-      componentsFilled.every((value) => value === '0');
+    // Verifica se etapa é educação infantil (1, 2 ou 3)
+    if (etapa === '1' || etapa === '2' || etapa === '3') {
+      const filledComponents = componentPositions.filter((position) => {
+        const value = parts[position];
+        return value && value.trim() !== '' && value.trim() !== '0';
+      });
 
-    if (allComponentsZero) {
-      errors.push(
-        this.createError(
-          lineNumber,
-          'componentes_curriculares_validation',
-          'Áreas do conhecimento/componentes curriculares',
-          43,
-          'all_zero',
-          'components_required',
-          '"Áreas do conhecimento/componentes curriculares" não foram preenchidas corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
-          ValidationSeverity.ERROR,
-        ),
-      );
+      if (filledComponents.length > 0) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'componentes_nao_permitidos_educacao_infantil',
+            'Áreas do conhecimento/componentes curriculares',
+            43,
+            etapa,
+            'components_not_allowed_early_childhood',
+            `Os campos de "Áreas do conhecimento/componentes curriculares" (campos 43-69) não podem ser preenchidos para etapa ${etapa} (Educação Infantil)`,
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
+    } else {
+      // Regra 10: Não podem todos os campos de 43 a 69 serem preenchidos com 0 (Não)
+      const componentValues = componentPositions.map((pos) => parts[pos] || '');
+      const componentsFilled = componentValues.filter((value) => value !== '');
+      const allComponentsZero =
+        componentsFilled.length > 0 &&
+        componentsFilled.every((value) => value === '0');
+
+      if (allComponentsZero) {
+        errors.push(
+          this.createError(
+            lineNumber,
+            'componentes_curriculares_validation',
+            'Áreas do conhecimento/componentes curriculares',
+            43,
+            'all_zero',
+            'components_required',
+            '"Áreas do conhecimento/componentes curriculares" não foram preenchidas corretamente. Não podem ser informadas todas as opções com valor igual a 0 (Não)',
+            ValidationSeverity.ERROR,
+          ),
+        );
+      }
     }
 
     return errors;

@@ -848,35 +848,35 @@ export class ValidationEngineService {
     const subjectAreas: { [key: string]: boolean } = {};
 
     // Mapping based on OFFICIAL documentation - fields 43-69 of record 20
-    // Each field position maps to the corresponding knowledge area code
+    // Each field position maps to the corresponding knowledge area code from CSV
     const fieldToAreaMapping: { [fieldPosition: number]: string } = {
-      42: '1', // Campo 43: 1. Química
-      43: '2', // Campo 44: 2. Física
-      44: '3', // Campo 45: 3. Matemática
-      45: '4', // Campo 46: 4. Biologia
-      46: '5', // Campo 47: 5. Ciências
-      47: '6', // Campo 48: 6. Língua/Literatura Portuguesa
-      48: '7', // Campo 49: 7. Língua/Literatura Estrangeira – Inglês
-      49: '8', // Campo 50: 8. Língua/Literatura Estrangeira – Espanhol
-      50: '9', // Campo 51: 9. Língua/Literatura Estrangeira – outra
-      51: '10', // Campo 52: 10. Arte (Educação Artística, Teatro, Dança, Música, Artes Plásticas e outras)
-      52: '11', // Campo 53: 11. Educação Física
-      53: '12', // Campo 54: 12. História
-      54: '13', // Campo 55: 13. Geografia
-      55: '14', // Campo 56: 14. Filosofia
-      56: '16', // Campo 57: 16. Informática/Computação
-      57: '17', // Campo 58: 17. Áreas do conhecimento profissionalizantes
-      58: '23', // Campo 59: 23. Libras
-      59: '25', // Campo 60: 25. Áreas do conhecimento pedagógicas
-      60: '26', // Campo 61: 26. Ensino Religioso ✅ (FIXED!)
-      61: '27', // Campo 62: 27. Língua Indígena
-      62: '28', // Campo 63: 28. Estudos Sociais
-      63: '29', // Campo 64: 29. Sociologia
-      64: '30', // Campo 65: 30. Língua/Literatura Estrangeira – Francês
-      65: '31', // Campo 66: 31. Língua Portuguesa como Segunda Língua
-      66: '32', // Campo 67: 32. Estágio curricular supervisionado
-      67: '33', // Campo 68: 33. Projeto de vida
-      68: '99', // Campo 69: 99. Outras áreas do conhecimento
+      42: '1', // Campo 43: Química
+      43: '2', // Campo 44: Física
+      44: '3', // Campo 45: Matemática
+      45: '4', // Campo 46: Biologia
+      46: '5', // Campo 47: Ciências
+      47: '6', // Campo 48: Língua/Literatura Portuguesa
+      48: '7', // Campo 49: Língua/Literatura Estrangeira – Inglês
+      49: '8', // Campo 50: Língua/Literatura Estrangeira – Espanhol
+      50: '9', // Campo 51: Língua/Literatura Estrangeira – outra
+      51: '10', // Campo 52: Arte
+      52: '11', // Campo 53: Educação Física
+      53: '12', // Campo 54: História
+      54: '13', // Campo 55: Geografia
+      55: '14', // Campo 56: Filosofia
+      56: '16', // Campo 57: Informática/Computação
+      57: '17', // Campo 58: Áreas do conhecimento profissionalizantes
+      58: '23', // Campo 59: Libras
+      59: '25', // Campo 60: Áreas do conhecimento pedagógicas
+      60: '26', // Campo 61: Ensino Religioso
+      61: '27', // Campo 62: Língua Indígena
+      62: '28', // Campo 63: Estudos Sociais
+      63: '29', // Campo 64: Sociologia
+      64: '30', // Campo 65: Língua/Literatura Estrangeira – Francês
+      65: '31', // Campo 66: Língua Portuguesa como Segunda Língua
+      66: '32', // Campo 67: Estágio curricular supervisionado
+      67: '33', // Campo 68: Projeto de vida
+      68: '99', // Campo 69: Outras áreas do conhecimento
     };
 
     // Process each field and check if it indicates the area is offered with teacher (value = "1")
